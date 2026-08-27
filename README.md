@@ -63,3 +63,7 @@ Set up via [cron-job.org](https://cron-job.org):
 ## License
 
 MIT
+
+## Images
+
+Package images are loaded from Supabase Storage.
