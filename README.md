@@ -1,69 +1,67 @@
 # DavaoBook
 
-A white-label tour booking PWA for Davao/Samal operators. Built with Next.js 14, Supabase, and Vercel.
+Tour booking PWA for Davao City & Samal Island.
 
-## Features
-
-- **Public booking flow**: Package grid → calendar picker → guest form → payment → voucher
-- **Operator admin**: Today dashboard, bookings management, calendar with blocks, weather blast
-- **PWA**: Offline support, installable, service worker with caching strategies
-- **SMS**: Confirmation, expiry, reminder, weather cancel via Semaphore
-
-## Tech Stack
-
-- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
-- **SMS**: Semaphore API
-- **Deployment**: Vercel
-
-## Quick Start
+## Deploy
 
 ```bash
-# Install dependencies
+# Local dev
 npm install
-
-# Set up environment
-cp .env.example .env.local
-# Fill in your Supabase and Semaphore credentials
-
-# Run development server
 npm run dev
 
-# Build for production
+# Production build
 npm run build
 ```
 
+Vercel auto-deploys from the monorepo. Region: `hnd1` (closest to PH).
+
 ## Environment Variables
 
-See `.env.example` for required variables.
+| Variable | Purpose |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase key (bypasses RLS) |
+| `SEMAPHORE_API_KEY` | Semaphore SMS API key |
+| `SEMAPHORE_SENDER_NAME` | SMS sender ID (default: DavaoBook) |
+| `CRON_SECRET` | Shared secret for cron endpoints (generate a random 32-char string) |
 
-## Database Setup
+## Cron Setup
 
-1. Create a Supabase project
-2. Run `supabase/migrations/001_init.sql` in the SQL Editor
-3. Run `supabase/migrations/002_create_booking_fn.sql`
+Two endpoints keep the system running without manual intervention:
 
-## Deployment
+### Expiry Sweep (`/api/cron/expiry`)
 
-### Vercel
+Hourly job that:
+1. Expires PENDING_PAYMENT bookings older than 24h → frees slot + sends apology SMS
+2. Auto-declines PENDING_CONFIRMATION bookings older than 48h (silent)
+3. Sends reminder SMS to CONFIRMED bookings whose tour is tomorrow
 
-1. Push to GitHub
-2. Import repository in Vercel
-3. Set root directory to `/` (this is a standalone repo)
-4. Add environment variables
-5. Deploy
+### Keep-Alive (`/api/cron/keepalive`)
 
-### Cron Jobs
+Weekly ping to Supabase to prevent free-tier project pause.
 
-Set up via [cron-job.org](https://cron-job.org):
+### Setting Up with cron-job.org
 
-- **Hourly**: `https://your-domain.vercel.app/api/cron/expiry` (Authorization: Bearer {CRON_SECRET})
-- **Weekly**: `https://your-domain.vercel.app/api/cron/keepalive`
+1. Go to [cron-job.org](https://cron-job.org) and create an account
+2. Create two jobs:
 
-## License
+**Expiry sweep (hourly):**
+- URL: `https://your-domain.vercel.app/api/cron/expiry`
+- Schedule: `0 * * * *` (every hour)
+- HTTP Method: GET
+- Headers: `Authorization: Bearer {CRON_SECRET}`
 
-MIT
+**Keep-alive (weekly):**
+- URL: `https://your-domain.vercel.app/api/cron/keepalive`
+- Schedule: `0 0 * * 0` (every Sunday midnight)
+- HTTP Method: GET
+- Headers: `Authorization: Bearer {CRON_SECRET}`
 
-## Images
+Both endpoints also accept POST. The `CRON_SECRET` must match the env var in Vercel.
 
-Package images are loaded from Supabase Storage.
+## Tech Stack
+
+- Next.js 14 (App Router)
+- TypeScript (strict)
+- Tailwind CSS with custom design tokens
+- Manrope (headings) + Inter (body) via next/font

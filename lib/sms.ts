@@ -3,7 +3,55 @@
  * Uses Semaphore REST API v4.
  */
 
+import { supabaseAdmin } from "@/lib/supabase-server";
+
 const SEMAPHORE_URL = "https://api.semaphore.co/api/v4/messages";
+
+/**
+ * Default notification preferences, used both as the column default and as the
+ * fallback when an operator's stored prefs are missing/null. If a channel key
+ * is absent from stored prefs we also default to TRUE (send) to preserve
+ * existing behavior.
+ */
+export const DEFAULT_PREFS = {
+  new_booking: true,
+  payment_received: true,
+  weather_cancel: true,
+  reminders: true,
+  email_digest: false,
+} as const;
+
+export type NotificationChannel = keyof typeof DEFAULT_PREFS;
+
+/**
+ * Returns whether an SMS for `channel` should be sent to the given operator,
+ * based on `operators.notification_prefs`. Anything missing (no operator, no
+ * prefs, or a missing key) defaults to TRUE so we never silently drop messages
+ * on schema/edge cases.
+ */
+export async function shouldSend(
+  operatorId: string,
+  channel: NotificationChannel
+): Promise<boolean> {
+  if (!operatorId) return true;
+
+  const { data, error } = await supabaseAdmin
+    .from("operators")
+    .select("notification_prefs")
+    .eq("id", operatorId)
+    .maybeSingle();
+
+  if (error || !data) return true;
+
+  const prefs = data.notification_prefs as
+    | Partial<Record<NotificationChannel, boolean>>
+    | null;
+
+  if (!prefs) return true;
+
+  const value = prefs[channel];
+  return value === undefined ? true : value;
+}
 
 export async function sendSMS(
   phone: string,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { sendSMS } from "@/lib/sms";
+import { sendSMS, shouldSend } from "@/lib/sms";
 
 /**
  * POST /api/admin/weather-cancel — Cancel all bookings for a date and blast SMS.
@@ -119,7 +119,9 @@ export async function POST(request: NextRequest) {
         `Rebook here: ${rebookUrl}\n` +
         `Booking code: ${booking.code}`;
 
-      const sent = await sendSMS(booking.mobile, message);
+      const sent = (await shouldSend(operatorId, "weather_cancel"))
+        ? await sendSMS(booking.mobile, message)
+        : false;
 
       await supabaseAdmin.from("notify_log").insert({
         booking_id: booking.id,

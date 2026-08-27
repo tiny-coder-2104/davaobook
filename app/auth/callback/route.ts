@@ -22,21 +22,23 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.session) {
-    return NextResponse.redirect(
-      `${origin}/auth/login?error=${encodeURIComponent(error?.message || "session_failed")}`
-    );
+    // Expired or already-used link — send to login with a friendly error flag.
+    return NextResponse.redirect(`${origin}/auth/login?error=link_expired`);
   }
 
   // Build response with cookies
   const response = NextResponse.redirect(`${origin}/admin/today`);
 
-  // Set auth cookies — httpOnly, secure, sameSite lax
-  const cookieOptions = [
-    `sb-access-token=${data.session.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${data.session.expires_in}`,
-    `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000`,
-  ].join(", ");
-
-  response.headers.append("Set-Cookie", cookieOptions);
+  // Set auth cookies — httpOnly, secure, sameSite lax.
+  // Each cookie must be its own Set-Cookie header (not comma-joined).
+  response.headers.append(
+    "Set-Cookie",
+    `sb-access-token=${data.session.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${data.session.expires_in}`
+  );
+  response.headers.append(
+    "Set-Cookie",
+    `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000`
+  );
 
   return response;
 }

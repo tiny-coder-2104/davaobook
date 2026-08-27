@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { sendSMS, expiryMessage, reminderMessage } from "@/lib/sms";
+import { sendSMS, expiryMessage, reminderMessage, shouldSend } from "@/lib/sms";
 
 /**
  * GET/POST /api/cron/expiry — Hourly expiry sweep.
@@ -29,7 +29,7 @@ async function expireStalePayments(origin: string): Promise<number> {
 
   const { data: bookings, error } = await supabaseAdmin
     .from("bookings")
-    .select(      "id, code, guest_name, mobile, packages!inner(name, slug)")
+    .select(      "id, code, guest_name, mobile, packages!inner(name, slug, operator_id)")
     .eq("status", "PENDING_PAYMENT")
     .lt("created_at", cutoff);
 
@@ -136,7 +136,7 @@ async function sendTourReminders(): Promise<number> {
   const { data: bookings, error } = await supabaseAdmin
     .from("bookings")
     .select(
-      "id, code, guest_name, mobile, pickup_area, packages!inner(name)"
+      "id, code, guest_name, mobile, pickup_area, packages!inner(name, operator_id)"
     )
     .eq("status", "CONFIRMED")
     .eq("tour_date", tomorrowStr);
@@ -162,15 +162,18 @@ async function sendTourReminders(): Promise<number> {
     const pkg = Array.isArray(b.packages) ? b.packages[0] : b.packages;
     const meetingPoint = b.pickup_area || "the meeting point";
 
-    const sent = await sendSMS(
-      b.mobile,
-      reminderMessage({
-        guest_name: b.guest_name,
-        package_name: pkg?.name ?? "your tour",
-        meeting_point: meetingPoint,
-        voucher_url: `/v/${b.code}`,
-      })
-    );
+    const operatorId = pkg?.operator_id;
+    const sent = (await shouldSend(operatorId ?? "", "reminders"))
+      ? await sendSMS(
+          b.mobile,
+          reminderMessage({
+            guest_name: b.guest_name,
+            package_name: pkg?.name ?? "your tour",
+            meeting_point: meetingPoint,
+            voucher_url: `/v/${b.code}`,
+          })
+        )
+      : false;
 
     await supabaseAdmin.from("notify_log").insert({
       booking_id: b.id,

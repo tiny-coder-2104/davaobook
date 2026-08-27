@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { sendSMS, confirmationMessage } from "@/lib/sms";
+import { sendSMS, confirmationMessage, shouldSend } from "@/lib/sms";
 
 /**
  * PATCH /api/admin/bookings/:id — Transition booking status.
@@ -105,7 +105,10 @@ export async function PATCH(
       voucher_url: voucherUrl,
     });
 
-    const smsSent = await sendSMS(booking.mobile, message);
+    let smsSent = false;
+    if (await shouldSend(operatorId, "payment_received")) {
+      smsSent = await sendSMS(booking.mobile, message);
+    }
 
     // Log SMS attempt
     await supabaseAdmin.from("notify_log").insert({
