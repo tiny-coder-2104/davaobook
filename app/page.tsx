@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { supabase } from "../lib/supabase";
 import type { Operator, Package } from "../lib/types";
 import TrustStrip from "./components/TrustStrip";
@@ -32,6 +33,21 @@ export default async function Home() {
 
   return (
     <main className="px-4 py-8 max-w-5xl mx-auto">
+      <header className="flex items-center justify-end gap-6 pb-8">
+        <Link
+          href="/auth/login"
+          className="text-brand text-sm font-medium hover:underline"
+        >
+          Operator sign in
+        </Link>
+        <Link
+          href="/auth/signup"
+          className="text-ink-muted text-sm font-medium hover:text-brand"
+        >
+          Create an operator account
+        </Link>
+      </header>
+
       <TrustStrip operator={operator} />
 
       {pkgList.length === 0 ? (

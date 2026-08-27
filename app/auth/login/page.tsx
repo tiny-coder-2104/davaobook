@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase-browser";
 
@@ -151,6 +152,13 @@ function LoginPageInner() {
             {loading ? "Sending…" : "Send login link"}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-ink-muted">
+          New operator?{" "}
+          <Link href="/auth/signup" className="text-brand underline text-sm">
+            Create an account
+          </Link>
+        </p>
       </div>
     </main>
   );
