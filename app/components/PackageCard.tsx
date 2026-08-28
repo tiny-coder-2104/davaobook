@@ -19,7 +19,7 @@ export default function PackageCard({ pkg }: { pkg: Package }) {
   return (
     <Link
       href={`/p/${pkg.slug}`}
-      className="group block rounded-touch overflow-hidden bg-surface shadow-sm hover:shadow-md transition-shadow"
+      className="group block rounded-touch overflow-hidden bg-surface border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="relative aspect-[4/3] bg-gray-100">
         {pkg.photo_url ? (
@@ -38,28 +38,35 @@ export default function PackageCard({ pkg }: { pkg: Package }) {
       </div>
 
       <div className="p-4">
-        <h2 className="font-heading font-semibold text-lg group-hover:text-brand transition-colors">
+        <h2 className="font-heading font-semibold text-lg leading-tight line-clamp-2 group-hover:text-brand transition-colors">
           {pkg.name}
         </h2>
 
-        <p className="mt-1 text-ink-muted text-sm">
-          From {formatPrice(from)}/pax
+        <p className="mt-2 text-sm">
+          <span className="text-ink-muted">From </span>
+          <span className="font-bold text-base text-ink">{formatPrice(from)}</span>
+          <span className="text-ink-muted">/pax</span>
         </p>
 
         {pkg.days_of_week.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-1">
             {pkg.days_of_week
               .sort((a, b) => a - b)
               .map((d) => (
                 <span
                   key={d}
-                  className="inline-block rounded-full bg-brand/10 text-brand text-xs font-medium px-2 py-0.5"
+                  className="inline-block rounded-full bg-brand/10 text-brand text-[11px] font-medium px-1.5 py-0.5"
                 >
                   {DAYS[d]}
                 </span>
               ))}
           </div>
         )}
+
+        {/* ponytail: span styled as button to avoid nested <a> inside outer Link */}
+        <span className="mt-4 block w-full text-center bg-brand text-white font-semibold rounded-touch py-2.5 text-sm group-hover:bg-brand-hover transition-colors">
+          Book Now
+        </span>
       </div>
     </Link>
   );

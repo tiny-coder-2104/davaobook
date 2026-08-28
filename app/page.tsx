@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { supabase } from "../lib/supabase";
 import type { Operator, Package } from "../lib/types";
 import TrustStrip from "./components/TrustStrip";
@@ -31,7 +32,7 @@ export default async function Home() {
   const pkgList: Package[] = (packages ?? []) as Package[];
 
   return (
-    <main className="px-4 py-8 max-w-5xl mx-auto">
+    <main className="px-4 py-8 md:py-10 max-w-5xl mx-auto">
       <TrustStrip operator={operator} />
 
       {pkgList.length === 0 ? (
@@ -43,6 +44,19 @@ export default async function Home() {
           ))}
         </div>
       )}
+
+      <footer className="mt-12 border-t border-gray-100 pt-10 pb-8 text-center">
+        <p className="font-heading font-semibold text-lg text-ink">
+          This is a live demo. Get your own branded booking page in minutes.
+        </p>
+        <Link
+          href="/auth/signup"
+          className="mt-4 inline-flex min-h-touch items-center justify-center rounded-touch bg-brand px-8 py-3 text-sm font-semibold text-white hover:bg-brand-hover transition-colors"
+        >
+          Create Operator Account
+        </Link>
+        <p className="mt-3 text-xs text-ink-muted">Powered by DavaoBook</p>
+      </footer>
     </main>
   );
 }
