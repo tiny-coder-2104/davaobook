@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { createBrowserClient } from "@/lib/supabase-browser";
 
 /**
- * LoginSecurity — email-only login & security section (client component).
+ * LoginSecurity — email + password login & security section (client component).
  *
  * Reads the current Supabase user on mount and exposes:
  *   - Email (user.email)
- *   - Connected login method: "Email magic link" (only method in v1) with an
- *     "Active" badge.
+ *   - Connected login method: "Email + password" with an "Active" badge.
  *   - Last login (user.last_sign_in_at, locale-formatted).
+ *   - Change password inline form -> supabase.auth.updateUser({ password })
  *
  * Also offers "Sign out other sessions" via supabase.auth.signOut({ scope:
  * "others" }). The primary Sign out lives in the sidebar/layout and is left
@@ -30,6 +30,13 @@ export default function LoginSecurity() {
   const [signingOut, setSigningOut] = useState(false);
   const [signOutMsg, setSignOutMsg] = useState<string | null>(null);
   const [signOutError, setSignOutError] = useState<string | null>(null);
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [pwMsg, setPwMsg] = useState<string | null>(null);
+  const [pwError, setPwError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +79,33 @@ export default function LoginSecurity() {
       );
     } finally {
       setSigningOut(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwMsg(null);
+    setPwError(null);
+    if (newPassword.length < 6) {
+      setPwError("Password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("Passwords do not match.");
+      return;
+    }
+    setUpdating(true);
+    try {
+      const supabase = createBrowserClient();
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw new Error(error.message);
+      setPwMsg("Password updated.");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Could not update password");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -121,7 +155,7 @@ export default function LoginSecurity() {
         <div className="flex items-center justify-between gap-4">
           <dt className="text-sm font-medium text-ink">Connected login method</dt>
           <dd className="flex items-center gap-2 text-sm text-ink-muted">
-            <span>Email magic link</span>
+            <span>Email + password</span>
             <span className="rounded-touch bg-brand/10 px-2 py-0.5 text-xs font-medium text-brand">
               Active
             </span>
@@ -133,6 +167,54 @@ export default function LoginSecurity() {
           <dd className="text-sm text-ink-muted text-right">{lastLogin}</dd>
         </div>
       </dl>
+
+      <form onSubmit={handleUpdatePassword} className="mt-6 border-t border-gray-100 pt-6">
+        <h3 className="text-sm font-medium text-ink">Change password</h3>
+        <div className="mt-3 grid gap-3 sm:max-w-sm">
+          <label className="block">
+            <span className="text-xs font-medium text-ink-muted">New password</span>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={newPassword}
+              onChange={(ev) => setNewPassword(ev.target.value)}
+              placeholder="At least 6 characters"
+              autoComplete="new-password"
+              className="mt-1 w-full rounded-touch border border-gray-200 px-3 py-2 text-sm text-ink placeholder:text-ink-muted/60 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-ink-muted">Confirm new password</span>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(ev) => setConfirmPassword(ev.target.value)}
+              placeholder="Repeat new password"
+              autoComplete="new-password"
+              className="mt-1 w-full rounded-touch border border-gray-200 px-3 py-2 text-sm text-ink placeholder:text-ink-muted/60 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ink-muted">
+            <input
+              type="checkbox"
+              checked={showPassword}
+              onChange={(ev) => setShowPassword(ev.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
+            />
+            Show password
+          </label>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="submit"
+            disabled={updating}
+            className="btn-secondary min-h-touch px-5 rounded-touch font-medium border border-gray-200 bg-white text-ink hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updating ? "Updating…" : "Update password"}
+          </button>
+          {pwMsg ? <span className="text-sm text-status-confirmed">{pwMsg}</span> : null}
+          {pwError ? <span className="text-sm text-red-500">{pwError}</span> : null}
+        </div>
+      </form>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <button
@@ -153,8 +235,7 @@ export default function LoginSecurity() {
       </div>
 
       <p className="mt-4 text-xs text-ink-muted">
-        Only email magic-link sign-in is supported in this version. Password and
-        phone login are not available yet.
+        You sign in with email + password. Use Forgot password if you need to reset.
       </p>
     </section>
   );
