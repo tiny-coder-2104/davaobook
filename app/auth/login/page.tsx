@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase-browser";
+import FragmentSessionPersistence from "@/app/auth/fragment-session";
 
 const LAST_EMAIL_KEY = "db_last_email";
 
@@ -103,6 +104,7 @@ function LoginPageInner() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
       <div className={card}>
+        <FragmentSessionPersistence />
         {linkExpired && (
           <div className="mb-6 rounded-touch border-l-4 border-status-cancelled bg-gray-50 px-4 py-3 text-sm text-status-cancelled">
             That login link expired or was already used. Request a new one below.
