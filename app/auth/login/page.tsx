@@ -143,10 +143,15 @@ function LoginPageInner() {
             Forgot password?
           </Link>
           <p className="text-sm text-ink-muted">
-            New operator?{" "}
-            <Link href="/auth/signup" className="text-brand underline text-sm">
-              Create an account
-            </Link>
+            New here?{" "}
+            <a
+              href="https://welcome-tinycoder-studio.vercel.app"
+              target="_blank"
+              rel="noopener"
+              className="text-brand underline text-sm"
+            >
+              Contact TinyCoder Studio
+            </a>
           </p>
           <p className="text-xs text-ink-muted">Previously used magic link? Use Forgot password to set a password.</p>
         </div>

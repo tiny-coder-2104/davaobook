@@ -12,7 +12,7 @@ export default async function Home() {
     .limit(1);
 
   const slug = operators?.[0]?.slug;
-  if (!slug) redirect("/auth/signup"); // no operators yet — nothing to show
+  if (!slug) redirect("/auth/login"); // no operators yet — nothing to show
 
   redirect(`/${slug}`);
 }

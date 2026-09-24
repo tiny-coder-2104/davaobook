@@ -72,6 +72,13 @@ export async function middleware(request: NextRequest) {
     return unauthorized(request);
   }
 
+  // Forced password reset: freshly-provisioned accounts must set their own
+  // password before reaching the admin. Keep the session — the
+  // change-password page uses it to call updateUser.
+  if (user.user_metadata?.must_change_password) {
+    return NextResponse.redirect(new URL("/auth/change-password", request.url));
+  }
+
   // Attach user info to headers for server components and API routes.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-user-id", user.id);

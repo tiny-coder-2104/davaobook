@@ -5,6 +5,7 @@ export interface Operator {
   logo_url: string | null;
   phone: string;
   email: string;
+  verified: boolean;
   created_at: string;
 }
 

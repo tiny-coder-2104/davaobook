@@ -71,10 +71,10 @@ export default async function OperatorLanding({
           This is a live demo. Get your own branded booking page in minutes.
         </p>
         <Link
-          href="/auth/signup"
-          className="mt-4 inline-flex min-h-touch items-center justify-center rounded-touch bg-brand px-8 py-3 text-sm font-semibold text-white hover:bg-brand-hover transition-colors"
+          href={`/${op.slug}/dashboard`}
+          className="mt-4 inline-block text-xs text-ink-muted hover:text-brand transition-colors"
         >
-          Create Operator Account
+          Operator login
         </Link>
         <p className="mt-3 text-xs text-ink-muted">Powered by DavaoBook</p>
         <a

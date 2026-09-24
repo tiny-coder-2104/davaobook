@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import type { Operator, Package, PackageTier } from "../../../lib/types";
+import VerifiedBadge from "../../components/VerifiedBadge";
 
 export const revalidate = 60;
 
@@ -91,7 +92,10 @@ export default async function PackageDetail({
       <div className="px-4 py-6 max-w-3xl mx-auto">
         {/* Operator name */}
         {operator && (
-          <p className="text-sm text-ink-muted mb-1">{operator.name}</p>
+          <p className="text-sm text-ink-muted mb-1 flex items-center gap-1.5">
+            {operator.name}
+            {operator.verified && <VerifiedBadge />}
+          </p>
         )}
 
         <h1 className="font-heading text-2xl font-bold">{pkgData.name}</h1>

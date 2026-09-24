@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Operator } from "../../lib/types";
+import VerifiedBadge from "./VerifiedBadge";
 
 export default function TrustStrip({ operator }: { operator: Operator | null }) {
   const title = operator?.name ?? "SeaClouds Mountain View Resort";
@@ -20,9 +21,12 @@ export default function TrustStrip({ operator }: { operator: Operator | null }) 
             </span>
           </div>
           <div className="min-w-0">
-            <h1 className="font-heading text-2xl font-bold leading-tight text-ink">
-              {title}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-heading text-2xl font-bold leading-tight text-ink">
+                {title}
+              </h1>
+              {operator?.verified && <VerifiedBadge />}
+            </div>
             <p className="mt-0.5 text-sm text-ink-muted">
               Confirmed bookings • Instant SMS updates • Easy online booking
             </p>
@@ -38,22 +42,6 @@ export default function TrustStrip({ operator }: { operator: Operator | null }) 
             </div>
           </div>
         </Link>
-
-        {/* CTAs right: stacked mobile, row desktop */}
-        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
-          <a
-            href="/auth/signup"
-            className="inline-flex min-h-touch items-center justify-center rounded-touch bg-brand px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover text-center"
-          >
-            Create an operator account
-          </a>
-          <a
-            href="/auth/login"
-            className="inline-flex min-h-touch items-center justify-center px-4 py-2 text-center text-sm font-medium text-ink-muted underline-offset-4 transition-colors hover:text-brand hover:underline"
-          >
-            Operator sign in
-          </a>
-        </div>
       </div>
     </header>
   );

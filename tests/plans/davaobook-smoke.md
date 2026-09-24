@@ -4,8 +4,8 @@ Full-system, one pass. Run order: Setup → Landing → Redirects → Packages �
 
 ```
 U=https://davaotours-booking.vercel.app
-SECRETS=/home/yuki/ai_works/pseudo_human/.secrets/supabase-gchcatdprvpmbwvfxqzi.env
-source $SECRETS   # provides SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY
+ENVFILE=${ENVFILE:?set to the Supabase env file path}
+source $ENVFILE   # provides SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY
 TS=$(date +%s)
 EMAIL=qa.$TS@example.com
 ```
