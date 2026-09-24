@@ -45,6 +45,28 @@ export default async function OperatorLanding({
       )}
 
       <footer className="mt-12 border-t border-gray-100 pt-10 pb-8 text-center">
+        <a
+          href="/track"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-ink-muted/25 px-5 min-h-[44px] text-sm font-medium text-[#2d6a4f] transition-colors hover:border-[#2d6a4f]/40 hover:bg-[#2d6a4f]/5 md:w-auto"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-[#2d6a4f]"
+            aria-hidden="true"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+            <path d="m9 16 2 2 4-4" />
+          </svg>
+          Track my booking
+        </a>
         <p className="font-heading font-semibold text-lg text-ink">
           This is a live demo. Get your own branded booking page in minutes.
         </p>
@@ -55,12 +77,6 @@ export default async function OperatorLanding({
           Create Operator Account
         </Link>
         <p className="mt-3 text-xs text-ink-muted">Powered by DavaoBook</p>
-        <Link
-          href="/track"
-          className="mt-1 inline-block text-xs text-ink-muted hover:text-brand transition-colors"
-        >
-          Track my booking
-        </Link>
         <a
           href="https://welcome-tinycoder-studio.vercel.app"
           target="_blank"
