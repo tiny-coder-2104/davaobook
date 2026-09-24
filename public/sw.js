@@ -1,16 +1,17 @@
-/* DavaoBook Service Worker — v1
+/* DavaoBook Service Worker — v2
  *
  * Strategies per spec §9:
  *   App shell / static assets → cache-first, versioned precache
  *   Package pages / images    → stale-while-revalidate
- *   /api/*                   → network-only (never serve stale)
+ *   /api/*, /admin/*, /auth/* → network-only (never serve stale; admin/auth
+ *                               must reflect live middleware + session state)
  *   /v/[code] (voucher)      → network-first with cached fallback banner
  *
  * Offline booking queue lives in the main app (IndexedDB via offline-queue.ts),
  * not in the SW. SW just enables offline page loads.
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const SHELL_CACHE = `davaobook-shell-${CACHE_VERSION}`;
 const PAGE_CACHE = `davaobook-pages-${CACHE_VERSION}`;
 const VOUCHER_CACHE = `davaobook-vouchers-${CACHE_VERSION}`;
@@ -54,8 +55,12 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET and cross-origin
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  // /api/* → network-only
-  if (url.pathname.startsWith("/api/")) {
+  // /api/*, /admin/*, /auth/* → network-only
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/admin/") ||
+    url.pathname.startsWith("/auth/")
+  ) {
     event.respondWith(fetch(request));
     return;
   }

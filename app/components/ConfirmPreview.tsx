@@ -111,7 +111,7 @@ export default function ConfirmPreview({
             <h3 className="text-sm font-medium text-ink-muted mb-2">
               Affected guests ({bookings.length})
             </h3>
-            <div className="max-h-48 overflow-y-auto rounded-touch border border-gray-100 divide-y divide-gray-50">
+            <div className="max-h-[3rem] overflow-y-auto rounded-touch border border-gray-100 divide-y divide-gray-50">
               {bookings.map((b) => (
                 <div key={b.code} className="flex items-center justify-between px-3 py-2 text-sm">
                   <div className="min-w-0">

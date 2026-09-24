@@ -32,12 +32,6 @@ const config: Config = {
           expired: "#9ca3af",
         },
       },
-      spacing: {
-        // 8px grid: these are multiples, base Tailwind already has 1=4px
-        // Custom increments for the grid
-        "48": "3rem",   // 48px touch target
-        "56": "3.5rem", // 56px CTA
-      },
       borderRadius: {
         touch: "0.5rem", // 8px for touch-friendly elements
       },
