@@ -7,10 +7,11 @@ import PackageCard from "./components/PackageCard";
 export const revalidate = 60;
 
 export default async function Home() {
-  // Fetch first operator with their packages
+  // Fetch first operator with their packages (oldest = seed/demo operator)
   const { data: operators } = await supabase
     .from("operators")
     .select("*")
+    .order("created_at", { ascending: true })
     .limit(1);
 
   const operator: Operator | null = operators?.[0] ?? null;
