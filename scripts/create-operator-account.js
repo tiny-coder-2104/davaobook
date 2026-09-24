@@ -9,9 +9,11 @@
  * KEY=VALUE env file passed as the 4th argument (e.g. the .secrets file).
  * Creates a confirmed user with must_change_password=true so the first
  * /admin visit forces a password reset.
+ *
+ * Zero deps — uses stdlib https (node16 has no global fetch).
  */
 const fs = require("fs");
-const { createClient } = require("@supabase/supabase-js");
+const https = require("https");
 
 const [operatorId, email, tempPassword, envFile] = process.argv.slice(2);
 
@@ -37,26 +39,50 @@ if (!url || !secretKey) {
   process.exit(1);
 }
 
-const supabase = createClient(url, secretKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
+const body = JSON.stringify({
+  email,
+  password: tempPassword,
+  email_confirm: true,
+  user_metadata: { must_change_password: true },
+  app_metadata: { operator_id: operatorId },
 });
 
-supabase.auth.admin
-  .createUser({
-    email,
-    password: tempPassword,
-    email_confirm: true,
-    user_metadata: { must_change_password: true },
-    app_metadata: { operator_id: operatorId },
-  })
-  .then(({ data, error }) => {
-    if (error) {
-      console.error("createUser failed:", error.message);
-      process.exit(1);
-    }
-    console.log("Created user id:", data.user.id);
-  })
-  .catch((err) => {
-    console.error("createUser failed:", err.message);
-    process.exit(1);
-  });
+const req = https.request(
+  new URL(`${url}/auth/v1/admin/users`),
+  {
+    method: "POST",
+    headers: {
+      apikey: secretKey,
+      Authorization: `Bearer ${secretKey}`,
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(body),
+    },
+  },
+  (res) => {
+    let data = "";
+    res.on("data", (chunk) => (data += chunk));
+    res.on("end", () => {
+      let parsed;
+      try {
+        parsed = JSON.parse(data);
+      } catch {
+        console.error(`createUser failed: HTTP ${res.statusCode} — ${data}`);
+        process.exit(1);
+      }
+      if (res.statusCode >= 400 || parsed.error) {
+        console.error(
+          "createUser failed:",
+          parsed.error_description || parsed.msg || parsed.error || `HTTP ${res.statusCode}`
+        );
+        process.exit(1);
+      }
+      console.log("Created user id:", parsed.id);
+    });
+  }
+);
+req.on("error", (err) => {
+  console.error("createUser failed:", err.message);
+  process.exit(1);
+});
+req.write(body);
+req.end();

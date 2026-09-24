@@ -65,7 +65,7 @@ export default function ChangePasswordPage() {
       } else {
         await supabase.auth.updateUser({ data: { must_change_password: false } });
         setSuccess(true);
-        setTimeout(() => router.push("/admin"), 1200);
+        setTimeout(() => router.push("/admin/today"), 1200);
       }
     } catch {
       setError("Network error — check your connection and try again.");

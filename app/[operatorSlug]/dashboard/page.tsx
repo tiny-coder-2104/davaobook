@@ -25,7 +25,7 @@ export default async function OperatorDashboard({
     const {
       data: { user },
     } = await supabase.auth.getUser(accessToken);
-    if (user) redirect("/admin");
+    if (user) redirect("/admin/today");
   }
 
   return (
