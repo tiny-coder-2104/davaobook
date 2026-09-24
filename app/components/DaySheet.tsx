@@ -159,7 +159,7 @@ export default function DaySheet({
                 {formatDate(date)}
               </h2>
               <p className="text-sm text-ink-muted">
-                {bookings.length} booking{bookings.length !== 1 ? "s" : ""} · {totalPax} pax
+                {bookings.length} booking{bookings.length !== 1 ? "s" : ""} · {totalPax} guest{totalPax === 1 ? "" : "s"}
                 {capacity > 0 ? ` · ${capacity} capacity` : ""}
               </p>
             </div>
@@ -247,7 +247,7 @@ export default function DaySheet({
                         </span>
                       </div>
                       <p className="text-xs text-ink-muted mt-0.5">
-                        {booking.pax} pax · {booking.code}
+                        {booking.pax} guest{booking.pax === 1 ? "" : "s"} · {booking.code}
                       </p>
                     </div>
                     <span className="text-ink-muted text-xs shrink-0">›</span>
@@ -301,7 +301,7 @@ export default function DaySheet({
                   <p className="text-2xl font-heading font-bold text-ink">
                     {activeBookings.reduce((s, b) => s + b.pax, 0)}
                   </p>
-                  <p className="text-[11px] text-ink-muted">Total pax</p>
+                  <p className="text-[11px] text-ink-muted">Total guests</p>
                 </div>
                 <div className="bg-gray-50 rounded-touch p-3 text-center">
                   <p className="text-2xl font-heading font-bold text-brand">
@@ -322,7 +322,7 @@ export default function DaySheet({
                       <div className="min-w-0">
                         <p className="font-medium truncate">{b.guest_name}</p>
                         <p className="text-xs text-ink-muted">
-                          {b.mobile || "No phone"} · {b.pax} pax
+                          {b.mobile || "No phone"} · {b.pax} guest{b.pax === 1 ? "" : "s"}
                         </p>
                       </div>
                       <span className="text-xs text-ink-muted font-mono shrink-0 ml-2">

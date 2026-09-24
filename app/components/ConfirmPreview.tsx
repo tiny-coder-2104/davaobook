@@ -96,7 +96,7 @@ export default function ConfirmPreview({
               <p className="text-2xl font-heading font-bold text-ink">
                 {totalPax}
               </p>
-              <p className="text-[11px] text-ink-muted">Total pax</p>
+              <p className="text-[11px] text-ink-muted">Total guests</p>
             </div>
             <div className="bg-gray-50 rounded-touch p-3 text-center">
               <p className="text-2xl font-heading font-bold text-brand">
@@ -116,7 +116,7 @@ export default function ConfirmPreview({
                 <div key={b.code} className="flex items-center justify-between px-3 py-2 text-sm">
                   <div className="min-w-0">
                     <p className="font-medium truncate">{b.guest_name}</p>
-                    <p className="text-xs text-ink-muted">{b.mobile || "No phone"} · {b.pax} pax</p>
+                    <p className="text-xs text-ink-muted">{b.mobile || "No phone"} · {b.pax} guest{b.pax === 1 ? "" : "s"}</p>
                   </div>
                   <span className="text-xs text-ink-muted font-mono shrink-0 ml-2">{b.code}</span>
                 </div>

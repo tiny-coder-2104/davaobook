@@ -18,7 +18,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "DavaoBook",
-  description: "Tour booking PWA for Davao City & Samal Island",
+  description: "Resort booking PWA for Davao City",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

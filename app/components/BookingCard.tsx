@@ -122,7 +122,7 @@ export default function BookingCard({
           </div>
 
           <p className="text-ink-muted text-sm mt-0.5 truncate">
-            {booking.packages?.name ?? "Package"} · {booking.pax} pax
+            {booking.packages?.name ?? "Package"} · {booking.pax} guest{booking.pax === 1 ? "" : "s"}
           </p>
 
           <div className="flex items-center justify-between mt-1.5 text-xs text-ink-muted">

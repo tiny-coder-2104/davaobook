@@ -9,7 +9,7 @@ const NAV = [
   { href: "/admin/today", label: "Today", icon: "📋" },
   { href: "/admin/bookings", label: "Bookings", icon: "📦" },
   { href: "/admin/calendar", label: "Calendar", icon: "📅" },
-  { href: "/admin/packages", label: "Packages", icon: "🏝️" },
+  { href: "/admin/packages", label: "Packages", icon: "⛰️" },
   { href: "/admin/new-booking", label: "New Booking", icon: "➕" },
 ];
 

@@ -168,7 +168,7 @@ async function sendTourReminders(): Promise<number> {
           b.mobile,
           reminderMessage({
             guest_name: b.guest_name,
-            package_name: pkg?.name ?? "your tour",
+            package_name: pkg?.name ?? "your stay",
             meeting_point: meetingPoint,
             voucher_url: `/v/${b.code}`,
           })

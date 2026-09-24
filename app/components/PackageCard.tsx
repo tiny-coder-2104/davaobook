@@ -45,7 +45,7 @@ export default function PackageCard({ pkg }: { pkg: Package }) {
         <p className="mt-2 text-sm">
           <span className="text-ink-muted">From </span>
           <span className="font-bold text-base text-ink">{formatPrice(from)}</span>
-          <span className="text-ink-muted">/pax</span>
+          <span className="text-ink-muted">/night</span>
         </p>
 
         {pkg.days_of_week.length > 0 && (
@@ -65,7 +65,7 @@ export default function PackageCard({ pkg }: { pkg: Package }) {
 
         {/* ponytail: span styled as button to avoid nested <a> inside outer Link */}
         <span className="mt-4 block w-full text-center bg-brand text-white font-semibold rounded-touch py-2.5 text-sm group-hover:bg-brand-hover transition-colors">
-          Book Now
+          Check Availability
         </span>
       </div>
     </Link>

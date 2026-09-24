@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       const pkg = Array.isArray(pkgRaw)
         ? pkgRaw[0] as { name: string; slug: string }
         : pkgRaw as { name: string; slug: string } | null;
-      const pkgName = pkg?.name ?? "your tour";
+      const pkgName = pkg?.name ?? "your stay";
       const rebookUrl = `${origin}/p/${pkg?.slug ?? ""}`;
 
       const message =

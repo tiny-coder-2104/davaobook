@@ -21,8 +21,8 @@ function TierTable({ tiers }: { tiers: PackageTier[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 text-left text-ink-muted">
-            <th className="py-2 font-medium">Pax</th>
-            <th className="py-2 font-medium text-right">Price / pax</th>
+            <th className="py-2 font-medium">Guests</th>
+            <th className="py-2 font-medium text-right">Price / night</th>
           </tr>
         </thead>
         <tbody>
@@ -30,7 +30,7 @@ function TierTable({ tiers }: { tiers: PackageTier[] }) {
             <tr key={i} className="border-b border-gray-100">
               <td className="py-2">
                 {tier.min_pax}
-                {tier.max_pax > tier.min_pax ? `–${tier.max_pax}` : ""} pax
+                {tier.max_pax > tier.min_pax ? `–${tier.max_pax}` : ""} guests
               </td>
               <td className="py-2 text-right font-medium">
                 {formatPrice(tier.price_per_pax)}
@@ -120,12 +120,12 @@ export default async function PackageDetail({
           <TierTable tiers={pkgData.tiers} />
         </section>
 
-        {/* Itinerary accordion — ponytail: native <details>, zero JS */}
+        {/* Room details accordion — ponytail: native <details>, zero JS */}
         {pkgData.description && (
           <section className="mt-6">
             <details className="group">
               <summary className="font-heading font-semibold text-lg cursor-pointer list-none flex items-center justify-between">
-                Itinerary
+                Room details
                 <span className="text-ink-muted text-sm group-open:rotate-180 transition-transform">
                   ▼
                 </span>
@@ -148,7 +148,7 @@ export default async function PackageDetail({
             href={`/p/${pkgData.slug}/book`}
             className="btn-primary w-full text-center block"
           >
-            Book now
+            Check availability
           </Link>
         </div>
       </div>

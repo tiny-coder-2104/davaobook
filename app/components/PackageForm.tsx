@@ -146,7 +146,7 @@ export default function PackageForm({
               type="text"
               value={data.name}
               onChange={(e) => update("name", e.target.value)}
-              placeholder="e.g. Island Hopping Tour"
+              placeholder="e.g. Standard Room"
               className={`w-full min-h-[48px] px-3 rounded-touch border-2 bg-white text-ink text-base
                 transition-colors focus:outline-none
                 ${errors.name ? "border-red-400" : "border-gray-200 focus:border-brand"}`}
@@ -163,7 +163,7 @@ export default function PackageForm({
               id="pkg-desc"
               value={data.description}
               onChange={(e) => update("description", e.target.value)}
-              placeholder="Describe the tour experience..."
+              placeholder="Describe the room..."
               rows={3}
               className="w-full px-3 py-2 rounded-touch border-2 border-gray-200 bg-white text-ink text-base
                 focus:border-brand focus:outline-none transition-colors resize-none"

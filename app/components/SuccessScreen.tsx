@@ -66,7 +66,7 @@ export default function SuccessScreen({
     try {
       await navigator.share({
         title: `Booking ${bookingCode}`,
-        text: `My ${packageName} booking is confirmed! Code: ${bookingCode}. Tour date: ${formatDisplayDate(tourDate)}. Total: ₱${totalAmount.toLocaleString("en-PH")}`,
+        text: `My ${packageName} booking is confirmed! Code: ${bookingCode}. Stay date: ${formatDisplayDate(tourDate)}. Total: ₱${totalAmount.toLocaleString("en-PH")}`,
       });
     } catch {
       // ponytail: user cancelled share or API unavailable

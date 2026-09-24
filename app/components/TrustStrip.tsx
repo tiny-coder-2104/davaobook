@@ -1,7 +1,7 @@
 import type { Operator } from "../../lib/types";
 
 export default function TrustStrip({ operator }: { operator: Operator | null }) {
-  const title = operator?.name ?? "Samal Island Tours";
+  const title = operator?.name ?? "SeaClouds Mountain View Resort";
 
   return (
     <header className="mb-8">
@@ -11,7 +11,7 @@ export default function TrustStrip({ operator }: { operator: Operator | null }) 
           {/* ponytail: gray placeholder box, emoji keeps it zero-asset */}
           <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border bg-gray-200">
             <span aria-hidden="true" className="text-base leading-none">
-              🏝️
+              ⛰️
             </span>
             <span className="text-[7px] font-medium uppercase tracking-wide text-gray-500">
               Your Logo

@@ -35,9 +35,9 @@ export default function TierEditor({ tiers, onChange }: TierEditorProps) {
     <div className="space-y-3">
       {/* Header row */}
       <div className="grid grid-cols-[1fr_1fr_1.2fr_auto] gap-2 text-xs font-medium text-ink-muted px-1">
-        <span>Min Pax</span>
-        <span>Max Pax</span>
-        <span>Price/Pax (₱)</span>
+        <span>Min Guests</span>
+        <span>Max Guests</span>
+        <span>Price/Night (₱)</span>
         <span className="w-8" />
       </div>
 

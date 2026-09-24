@@ -92,7 +92,7 @@ export default function VoucherCard({ data, isOnline }: VoucherCardProps) {
     try {
       await navigator.share({
         title: `Voucher — ${data.package_name}`,
-        text: `${data.guest_name}, your ${data.package_name} booking is ${STATUS_LABEL[data.status] ?? data.status}. Code: ${data.code}. Tour: ${formatDisplayDate(data.tour_date)}.`,
+        text: `${data.guest_name}, your ${data.package_name} booking is ${STATUS_LABEL[data.status] ?? data.status}. Code: ${data.code}. Stay: ${formatDisplayDate(data.tour_date)}.`,
         url: voucherUrl,
       });
     } catch {
@@ -166,7 +166,7 @@ export default function VoucherCard({ data, isOnline }: VoucherCardProps) {
           </div>
           <div className="flex justify-between items-baseline">
             <span className="text-xs text-ink-muted uppercase tracking-wide">
-              Tour Date
+              Stay Date
             </span>
             <span className="text-sm font-medium text-ink">
               {formatDisplayDate(data.tour_date)}
@@ -177,7 +177,7 @@ export default function VoucherCard({ data, isOnline }: VoucherCardProps) {
               Guests
             </span>
             <span className="text-sm font-medium text-ink">
-              {data.pax} {data.pax === 1 ? "pax" : "pax"}
+              {data.pax} {data.pax === 1 ? "guest" : "guests"}
             </span>
           </div>
           <div className="flex justify-between items-baseline">

@@ -119,7 +119,7 @@ export default function SignupPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Tour Co."
+              placeholder="Resort Co."
               className="w-full rounded-touch border border-gray-300 px-4 py-3 text-base
                          focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
               autoComplete="name"

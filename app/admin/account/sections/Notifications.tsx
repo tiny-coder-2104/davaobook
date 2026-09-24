@@ -32,11 +32,11 @@ const CHANNELS: { key: keyof NotificationPrefs; label: string; hint: string }[] 
   {
     key: "weather_cancel",
     label: "Weather cancellation blast (SMS)",
-    hint: "Blast guests if a tour is cancelled due to weather.",
+    hint: "Blast guests if a stay is cancelled due to weather.",
   },
   {
     key: "reminders",
-    label: "Tour reminders (SMS)",
+    label: "Stay reminders (SMS)",
     hint: "Send an automatic T-24h reminder to guests.",
   },
   {

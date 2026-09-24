@@ -42,7 +42,7 @@ export default function PaxStepper({
         className="min-w-[48px] min-h-[48px] rounded-touch bg-gray-100 text-2xl font-bold flex items-center justify-center
                    hover:bg-gray-200 active:scale-95 transition-all
                    disabled:opacity-30 disabled:cursor-not-allowed"
-        aria-label="Decrease pax"
+        aria-label="Decrease guests"
       >
         −
       </button>
@@ -67,7 +67,7 @@ export default function PaxStepper({
         className="min-w-[48px] min-h-[48px] rounded-touch bg-gray-100 text-2xl font-bold flex items-center justify-center
                    hover:bg-gray-200 active:scale-95 transition-all
                    disabled:opacity-30 disabled:cursor-not-allowed"
-        aria-label="Increase pax"
+        aria-label="Increase guests"
       >
         +
       </button>

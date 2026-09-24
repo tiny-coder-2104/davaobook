@@ -43,8 +43,8 @@ function priceRange(tiers: Package["tiers"]): string {
   const prices = tiers.map((t) => t.price_per_pax);
   const min = Math.min(...prices);
   const max = Math.max(...prices);
-  if (min === max) return `₱${min.toLocaleString("en-PH")}/pax`;
-  return `₱${min.toLocaleString("en-PH")}–${max.toLocaleString("en-PH")}/pax`;
+  if (min === max) return `₱${min.toLocaleString("en-PH")}/night`;
+  return `₱${min.toLocaleString("en-PH")}–${max.toLocaleString("en-PH")}/night`;
 }
 
 /* ── Main component ── */
@@ -142,7 +142,7 @@ export default function AdminPackages() {
                   />
                 ) : (
                   <div className="w-[72px] h-[72px] rounded-lg bg-gray-50 flex items-center justify-center text-2xl shrink-0">
-                    🏝️
+                    ⛰️
                   </div>
                 )}
 
@@ -170,7 +170,7 @@ export default function AdminPackages() {
                   <div className="flex items-center gap-3 mt-1 text-xs text-ink-muted">
                     <span>{formatDays(pkg.days_of_week)}</span>
                     <span>·</span>
-                    <span>{pkg.capacity_per_day} pax/day</span>
+                    <span>{pkg.capacity_per_day} rooms/night</span>
                     {pkg.downpayment_pct > 0 && (
                       <>
                         <span>·</span>

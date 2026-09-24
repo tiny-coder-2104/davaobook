@@ -103,8 +103,8 @@ export default function BookingDetailSheet({
               label="Package"
               value={booking.packages?.name ?? "—"}
             />
-            <InfoRow label="Tour Date" value={booking.tour_date} />
-            <InfoRow label="Pax" value={String(booking.pax)} />
+            <InfoRow label="Stay Date" value={booking.tour_date} />
+            <InfoRow label="Guests" value={String(booking.pax)} />
             <InfoRow
               label="Total"
               value={`₱${booking.total_amount.toLocaleString("en-PH")}`}

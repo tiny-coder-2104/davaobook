@@ -147,7 +147,7 @@ export function reminderMessage(params: {
   voucher_url: string;
 }): string {
   return (
-    `Hi ${params.guest_name}, reminder: your ${params.package_name} tour is tomorrow. ` +
+    `Hi ${params.guest_name}, reminder: your ${params.package_name} stay is tomorrow. ` +
     `See you at ${params.meeting_point}!\n` +
     `View voucher: ${params.voucher_url}`
   );

@@ -162,7 +162,7 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">
-                Tour Date <span className="text-red-500">*</span>
+                Stay Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -181,7 +181,7 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">
-                Pax <span className="text-red-500">*</span>
+                Guests <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -201,7 +201,7 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
           <div className="p-3 rounded-touch bg-brand/5 border border-brand/20 space-y-1">
             <div className="flex justify-between text-sm">
               <span className="text-ink-muted">
-                {pax} pax × ₱{pricing.pricePerPax.toLocaleString("en-PH")}
+                {pax} guest{pax === 1 ? "" : "s"} × ₱{pricing.pricePerPax.toLocaleString("en-PH")}
               </span>
               <span className="font-semibold">
                 ₱{totalAmount.toLocaleString("en-PH")}

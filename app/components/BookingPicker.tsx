@@ -102,7 +102,7 @@ export default function BookingPicker({
                 <span className="font-medium text-ink">
                   ₱{pricing.total.toLocaleString("en-PH")}
                 </span>
-                <span className="ml-1">for {pax} pax</span>
+                <span className="ml-1">for {pax} guest{pax === 1 ? "" : "s"}</span>
               </div>
             </div>
             <button
@@ -122,7 +122,7 @@ export default function BookingPicker({
         ) : pax > 0 ? (
           /* No tier match warning */
           <div className="w-full bg-white border-t border-gray-200 px-4 py-3 text-center text-red-500 text-sm font-medium">
-            No pricing tier for {pax} pax
+            No pricing tier for {pax} guest{pax === 1 ? "" : "s"}
           </div>
         ) : null}
       </div>
