@@ -55,6 +55,12 @@ export default async function OperatorLanding({
           Create Operator Account
         </Link>
         <p className="mt-3 text-xs text-ink-muted">Powered by DavaoBook</p>
+        <Link
+          href="/track"
+          className="mt-1 inline-block text-xs text-ink-muted hover:text-brand transition-colors"
+        >
+          Track my booking
+        </Link>
         <a
           href="https://welcome-tinycoder-studio.vercel.app"
           target="_blank"
