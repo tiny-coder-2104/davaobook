@@ -24,6 +24,11 @@ const STATUS_LABELS: Record<string, string> = {
   NO_SHOW: "No Show",
 };
 
+// Booking code shape: {PKG-SLUG}-{MMDD}-{GUEST-NAME-FIRST-4}, e.g. STAND-0826-JUAN.
+// Matches lib/booking-code.ts generateBookingCode() / SQL generate_booking_code().
+// Slug = first 5 chars of package slug, name = first 4 alphanumeric chars.
+const BOOKING_CODE_RE = /^[A-Z0-9]{1,5}-\d{4}-[A-Z0-9]{1,4}$/i;
+
 function formatDisplayDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-PH", {
@@ -45,8 +50,9 @@ export default function TrackPage() {
     const value = input.trim();
     if (!value) return;
 
-    // Booking code pattern: PKG-XXXX-XXXX (contains a dash)
-    if (value.includes("-")) {
+    // Booking-code-shaped input → direct status page; anything else (incl.
+    // hyphenated emails like mary-jane@example.com) → email lookup.
+    if (BOOKING_CODE_RE.test(value)) {
       router.push(`/b/${value.toUpperCase()}`);
       return;
     }

@@ -2,18 +2,31 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Middleware: protects /admin/* routes.
+ * Middleware: protects /admin/* pages and /api/admin/* routes.
  * 1. Verifies a valid Supabase session cookie
  * 2. Bounces to /auth/login (clearing cookies) if no session OR no operator_id claim
  * 3. Attaches x-user-id and x-operator-id headers for downstream server components / API routes
  *
  * Admin routes carry no operatorId in the URL path, so scoping is enforced via
  * the x-operator-id claim derived from the session JWT. Every /api/admin/* route
- * reads this header and filters its queries by operator_id.
+ * reads this header and filters its queries by operator_id. The header is set
+ * here from the verified session, overwriting any client-supplied value — a
+ * forged x-operator-id header never reaches the API routes.
  */
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
+
+function unauthorized(request: NextRequest): NextResponse {
+  // API routes get a JSON 401; pages get bounced to the login wall.
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const response = NextResponse.redirect(new URL("/auth/login", request.url));
+  response.cookies.delete("sb-access-token");
+  response.cookies.delete("sb-refresh-token");
+  return response;
+}
 
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,14 +34,14 @@ export async function middleware(request: NextRequest) {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("Supabase env vars missing in middleware");
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    return unauthorized(request);
   }
 
   const accessToken = request.cookies.get("sb-access-token")?.value;
   const refreshToken = request.cookies.get("sb-refresh-token")?.value;
 
   if (!accessToken || !refreshToken) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    return unauthorized(request);
   }
 
   // Create Supabase client to verify the session
@@ -45,10 +58,7 @@ export async function middleware(request: NextRequest) {
 
   // No valid session → clear cookies and bounce to login.
   if (error || !user) {
-    const response = NextResponse.redirect(new URL("/auth/login", request.url));
-    response.cookies.delete("sb-access-token");
-    response.cookies.delete("sb-refresh-token");
-    return response;
+    return unauthorized(request);
   }
 
   // Derive operator_id robustly from the JWT claims.
@@ -59,10 +69,7 @@ export async function middleware(request: NextRequest) {
   // reach any /admin/* route. Bounce them to login and clear cookies so they
   // re-authenticate (or an admin re-provisions the claim).
   if (!operatorId) {
-    const response = NextResponse.redirect(new URL("/auth/login", request.url));
-    response.cookies.delete("sb-access-token");
-    response.cookies.delete("sb-refresh-token");
-    return response;
+    return unauthorized(request);
   }
 
   // Attach user info to headers for server components and API routes.

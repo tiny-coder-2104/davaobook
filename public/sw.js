@@ -16,9 +16,10 @@ const PAGE_CACHE = `davaobook-pages-${CACHE_VERSION}`;
 const VOUCHER_CACHE = `davaobook-vouchers-${CACHE_VERSION}`;
 
 // Precache app shell on install
+// Note: /globals.css is NOT here — Next.js bundles it into /_next/static, so
+// the public path 404s and cache.addAll() would reject, killing the install.
 const SHELL_ASSETS = [
   "/",
-  "/globals.css",
   "/icons/icon-192.svg",
   "/icons/icon-512.svg",
 ];

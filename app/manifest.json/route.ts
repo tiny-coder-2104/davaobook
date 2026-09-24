@@ -26,7 +26,6 @@ export async function GET(request: Request) {
         .from("operators")
         .select("name, slug")
         .eq("slug", slug)
-        .eq("active", true)
         .single();
 
       if (data) {
