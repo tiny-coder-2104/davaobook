@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
   const { count: upcoming7d, error: upcomingErr } = await supabaseAdmin
     .from("bookings")
-    .select("id", { count: "exact", head: true })
+    .select("id, packages!inner(operator_id)", { count: "exact", head: true })
     .eq("packages.operator_id", operatorId)
     .gte("tour_date", tomorrow)
     .lte("tour_date", weekEnd)
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   const monthStart = today.slice(0, 7) + "-01";
   const { data: monthBookings, error: monthErr } = await supabaseAdmin
     .from("bookings")
-    .select("total_amount")
+    .select("total_amount, packages!inner(operator_id)")
     .eq("packages.operator_id", operatorId)
     .eq("status", "CONFIRMED")
     .gte("tour_date", monthStart)
