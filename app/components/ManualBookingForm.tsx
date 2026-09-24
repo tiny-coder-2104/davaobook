@@ -201,7 +201,7 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
           <div className="p-3 rounded-touch bg-brand/5 border border-brand/20 space-y-1">
             <div className="flex justify-between text-sm">
               <span className="text-ink-muted">
-                {pax} guest{pax === 1 ? "" : "s"} × ₱{pricing.pricePerPax.toLocaleString("en-PH")}
+                ₱{pricing.pricePerPax.toLocaleString("en-PH")} / night
               </span>
               <span className="font-semibold">
                 ₱{totalAmount.toLocaleString("en-PH")}

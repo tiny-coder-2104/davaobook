@@ -42,3 +42,7 @@ BEGIN
   END IF;
 END
 $$;
+
+-- Seed operator brand color (matches live SeaClouds data; idempotent)
+UPDATE operators SET brand_color = '#2d6a4f'
+WHERE id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';

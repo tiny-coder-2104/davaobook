@@ -115,7 +115,7 @@ CREATE INDEX idx_blocks_date
 -- ============================================================================
 -- 7. BOOKING CODE GENERATION FUNCTION
 -- Format: {PKG-SLUG}-{MMDD}-{GUEST-NAME-FIRST-4}
--- Example: SAMAL-0826-JUAN
+-- Example: STAND-0826-JUAN
 -- ============================================================================
 CREATE OR REPLACE FUNCTION generate_booking_code(
   p_package_slug text,
@@ -293,51 +293,54 @@ CREATE POLICY "Operator read own notify_log"
 -- 10. SEED DATA
 -- ============================================================================
 
--- Demo operator
+-- Demo operator — SeaClouds Mountain View Resort (matches live DB)
 INSERT INTO operators (id, name, slug, phone, email) VALUES
   (
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    'Samal Island Tours',
-    'samal-island-tours',
+    'SeaClouds Mountain View Resort',
+    'seaclouds-mountain-view-resort',
     '+639171234567',
-    'hello@samalislandtours.ph'
+    'hello@seacloudsresort.ph'
   );
 
--- Demo packages
-INSERT INTO packages (operator_id, name, slug, description, tiers, days_of_week, capacity_per_day, downpayment_pct, cutoff_hours, dp_refundable) VALUES
+-- Demo room packages — flat per-night rate per tier (matches live DB)
+INSERT INTO packages (id, operator_id, name, slug, description, tiers, days_of_week, capacity_per_day, downpayment_pct, cutoff_hours, dp_refundable) VALUES
   (
+    '12cb688a-ac00-4c8b-bb55-4545ac7d1de1',
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    'Island Hopping',
-    'island-hopping',
-    'Full day island hopping tour around Samal Island with snorkeling, lunch, and beach stops.',
-    '[{"min_pax": 1, "max_pax": 4, "price_per_pax": 1500}, {"min_pax": 5, "max_pax": 10, "price_per_pax": 1200}]'::jsonb,
+    'Standard Room',
+    'standard-room',
+    'Cozy room with mountain view, queen bed, private bath, free breakfast.',
+    '[{"min_pax": 1, "max_pax": 2, "price_per_pax": 1500}, {"min_pax": 3, "max_pax": 4, "price_per_pax": 1800}]'::jsonb,
     '{0,1,2,3,4,5,6}',
-    20,
-    50,
-    24,
-    false
-  ),
-  (
-    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    'Sunset Cruise',
-    'sunset-cruise',
-    'Evening sunset cruise with drinks, music, and stunning views of Davao Gulf.',
-    '[{"min_pax": 1, "max_pax": 6, "price_per_pax": 2000}, {"min_pax": 7, "max_pax": 12, "price_per_pax": 1700}]'::jsonb,
-    '{3,4,5,6}',
-    12,
+    5,
     30,
     24,
     false
   ),
   (
+    '657de57b-36da-4250-aa17-57983ec98cd4',
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    'Mangrove Tour',
-    'mangrove-tour',
-    'Guided mangrove eco-tour with kayaking and wildlife spotting.',
-    '[{"min_pax": 1, "max_pax": 8, "price_per_pax": 800}]'::jsonb,
+    'Family Cabin',
+    'family-cabin',
+    'Spacious cabin for families, 2 queen beds, veranda with valley view.',
+    '[{"min_pax": 1, "max_pax": 4, "price_per_pax": 2500}, {"min_pax": 5, "max_pax": 6, "price_per_pax": 3000}]'::jsonb,
     '{0,1,2,3,4,5,6}',
-    15,
-    20,
+    3,
+    30,
+    24,
+    false
+  ),
+  (
+    '08a2a206-e396-4d1a-b107-f0ca96ed3600',
+    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    'Mountain View Suite',
+    'mountain-view-suite',
+    'Premium suite, king bed, private balcony, fireplace, best view in the house.',
+    '[{"min_pax": 1, "max_pax": 2, "price_per_pax": 3500}, {"min_pax": 3, "max_pax": 4, "price_per_pax": 4000}]'::jsonb,
+    '{0,1,2,3,4,5,6}',
+    2,
+    30,
     24,
     false
   );

@@ -67,7 +67,8 @@ BEGIN
     RAISE EXCEPTION 'NO_TIER_FOR_PAX' USING ERRCODE = 'P0006';
   END IF;
 
-  v_total := v_tier_price * p_pax;
+  -- Flat per-night rate: tier price covers the tier's guest capacity
+  v_total := v_tier_price;
 
   -- 6. Transactional capacity check with row lock
   --    Lock the package row to serialize concurrent bookings

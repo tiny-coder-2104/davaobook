@@ -4,6 +4,10 @@ import { PackageTier } from "./types";
  * Finds the matching tier for a given pax count and returns the price.
  * Tiers are ordered by min_pax; the first matching tier wins.
  *
+ * Rooms are priced FLAT per night: the tier price is the nightly rate for
+ * the tier's guest capacity, NOT per guest. Total = tier price regardless
+ * of pax within the tier. (DB field stays price_per_pax — no schema change.)
+ *
  * @returns { pricePerPax, total } or null if no tier matches
  */
 export function calculateTierPrice(
@@ -14,6 +18,6 @@ export function calculateTierPrice(
   if (!tier) return null;
   return {
     pricePerPax: tier.price_per_pax,
-    total: tier.price_per_pax * pax,
+    total: tier.price_per_pax,
   };
 }

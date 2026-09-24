@@ -46,7 +46,7 @@ export default function BookingFormFlow({
 
   // Pricing (re-derive from tier)
   const pricing = tiers.find((t) => pax >= t.min_pax && pax <= t.max_pax);
-  const totalAmount = pricing ? pricing.price_per_pax * pax : 0;
+  const totalAmount = pricing ? pricing.price_per_pax : 0; // flat per-night rate
   const pricePerPax = pricing?.price_per_pax ?? 0;
 
   // Booking result

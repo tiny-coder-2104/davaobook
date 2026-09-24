@@ -56,7 +56,7 @@ export default function BookingConfirmation({
         <Row label="Package" value={packageName} />
         <Row label="Date" value={formatDisplayDate(tourDate)} />
         <Row label="Guests" value={`${pax} guest${pax === 1 ? "" : "s"}`} />
-        <Row label="Price" value={`₱${pricePerPax.toLocaleString("en-PH")} × ${pax}`} />
+        <Row label="Price" value={`₱${pricePerPax.toLocaleString("en-PH")} / night`} />
         <div className="border-t border-gray-100 pt-2">
           <Row label="Total" value={`₱${totalAmount.toLocaleString("en-PH")}`} bold />
         </div>
