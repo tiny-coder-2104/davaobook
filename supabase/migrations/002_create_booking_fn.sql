@@ -1,6 +1,8 @@
 -- ============================================================================
 -- DavaoBook — Transactional booking creation function
 -- Atomic capacity check + insert via SELECT FOR UPDATE
+-- New bookings land in PENDING_CONFIRMATION (owner confirms + handles
+-- payment offline). PENDING_PAYMENT is legacy (pre-0009 flow).
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION create_booking_transactional(
@@ -102,7 +104,7 @@ BEGIN
     v_code, p_package_id, v_package.operator_id, p_tour_date, p_pax,
     v_tier_price, v_total,
     p_guest_name, p_guest_mobile, p_guest_email, p_guest_pickup_area, p_guest_notes,
-    'PENDING_PAYMENT'
+    'PENDING_CONFIRMATION'
   )
   RETURNING id, status INTO v_booking_id, v_status;
 

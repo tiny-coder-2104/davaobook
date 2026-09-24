@@ -3,12 +3,10 @@
 import { useState, useCallback } from "react";
 import BookingPicker from "./BookingPicker";
 import GuestDetailsForm from "./GuestDetailsForm";
-import PaymentChoice from "./PaymentChoice";
 import BookingConfirmation from "./BookingConfirmation";
 import SuccessScreen from "./SuccessScreen";
 import ProgressBar from "./ProgressBar";
 import type { GuestDetails } from "./GuestDetailsForm";
-import type { PaymentData } from "./PaymentChoice";
 import type { PackageTier } from "@/lib/types";
 
 /* ── Types ── */
@@ -18,14 +16,11 @@ interface BookingFormFlowProps {
   pkgSlug: string;
   pkgName: string;
   tiers: PackageTier[];
-  downpaymentPct: number;
-  operatorGcashQrUrl: string | null;
-  operatorGcashNumber: string | null;
 }
 
-type FlowStep = "picker" | "details" | "payment" | "confirm" | "success";
+type FlowStep = "picker" | "details" | "confirm" | "success";
 
-const STEP_LABELS = ["Details", "Payment", "Confirm"];
+const STEP_LABELS = ["Details", "Confirm"];
 
 /* ── Component ── */
 
@@ -34,15 +29,11 @@ export default function BookingFormFlow({
   pkgSlug,
   pkgName,
   tiers,
-  downpaymentPct,
-  operatorGcashQrUrl,
-  operatorGcashNumber,
 }: BookingFormFlowProps) {
   const [step, setStep] = useState<FlowStep>("picker");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [pax, setPax] = useState(1);
   const [guestDetails, setGuestDetails] = useState<GuestDetails | null>(null);
-  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
 
   // Pricing (re-derive from tier)
   const pricing = tiers.find((t) => pax >= t.min_pax && pax <= t.max_pax);
@@ -62,22 +53,18 @@ export default function BookingFormFlow({
 
   const handleDetailsSubmit = useCallback((details: GuestDetails) => {
     setGuestDetails(details);
-    setStep("payment");
-  }, []);
-
-  const handlePaymentSubmit = useCallback((data: PaymentData) => {
-    setPaymentData(data);
     setStep("confirm");
   }, []);
 
   const handleSubmitBooking = useCallback(async () => {
-    if (!selectedDate || !guestDetails || !paymentData) return;
+    if (!selectedDate || !guestDetails) return;
 
     setSubmitting(true);
     setSubmitError(null);
 
     try {
-      // 1. Create booking
+      // Create booking — lands in PENDING_CONFIRMATION; owner confirms
+      // and handles payment offline.
       const createRes = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,27 +86,7 @@ export default function BookingFormFlow({
         throw new Error(createData.error || "Failed to create booking");
       }
 
-      const code: string = createData.code;
-
-      // 2. Submit payment details (transitions to PENDING_CONFIRMATION)
-      const paymentRes = await fetch(`/api/bookings/${code}/payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          method: paymentData.method,
-          gcash_ref: paymentData.gcash_ref || null,
-          screenshot_url: paymentData.screenshot_url || null,
-        }),
-      });
-
-      if (!paymentRes.ok) {
-        const paymentErr = await paymentRes.json();
-        // ponytail: booking was created but payment transition failed;
-        // still show the code so the guest can return later
-        console.error("Payment submission error:", paymentErr);
-      }
-
-      setBookingCode(code);
+      setBookingCode(createData.code);
       setStep("success");
     } catch (err) {
       setSubmitError(
@@ -128,11 +95,10 @@ export default function BookingFormFlow({
     } finally {
       setSubmitting(false);
     }
-  }, [selectedDate, guestDetails, paymentData, pkgId, pax]);
+  }, [selectedDate, guestDetails, pkgId, pax]);
 
-  // Progress bar index (0=details, 1=payment, 2=confirm)
-  const progressIndex =
-    step === "details" ? 0 : step === "payment" ? 1 : step === "confirm" ? 2 : -1;
+  // Progress bar index (0=details, 1=confirm)
+  const progressIndex = step === "details" ? 0 : step === "confirm" ? 1 : -1;
 
   return (
     <>
@@ -140,7 +106,7 @@ export default function BookingFormFlow({
       {progressIndex >= 0 && (
         <ProgressBar
           currentStep={progressIndex}
-          totalSteps={3}
+          totalSteps={2}
           labels={STEP_LABELS}
         />
       )}
@@ -162,27 +128,15 @@ export default function BookingFormFlow({
         />
       )}
 
-      {step === "payment" && (
-        <PaymentChoice
-          totalAmount={totalAmount}
-          gcashQrUrl={operatorGcashQrUrl}
-          gcashNumber={operatorGcashNumber}
-          onSubmit={handlePaymentSubmit}
-          onBack={() => setStep("details")}
-        />
-      )}
-
-      {step === "confirm" && selectedDate && guestDetails && paymentData && (
+      {step === "confirm" && selectedDate && guestDetails && (
         <BookingConfirmation
           packageName={pkgName}
           tourDate={selectedDate}
           pax={pax}
           pricePerPax={pricePerPax}
           totalAmount={totalAmount}
-          downpaymentPct={downpaymentPct}
           guestDetails={guestDetails}
-          paymentData={paymentData}
-          onBack={() => setStep("payment")}
+          onBack={() => setStep("details")}
           onSubmit={handleSubmitBooking}
           submitting={submitting}
           error={submitError}

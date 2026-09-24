@@ -66,7 +66,7 @@ export default function SuccessScreen({
     try {
       await navigator.share({
         title: `Booking ${bookingCode}`,
-        text: `My ${packageName} booking is confirmed! Code: ${bookingCode}. Stay date: ${formatDisplayDate(tourDate)}. Total: ₱${totalAmount.toLocaleString("en-PH")}`,
+        text: `My ${packageName} booking request is in! Code: ${bookingCode}. Stay date: ${formatDisplayDate(tourDate)}. Total: ₱${totalAmount.toLocaleString("en-PH")}`,
       });
     } catch {
       // ponytail: user cancelled share or API unavailable
@@ -95,11 +95,11 @@ export default function SuccessScreen({
       </div>
 
       <h1 className="font-heading font-bold text-xl text-ink mb-2">
-        Booking submitted!
+        Request received!
       </h1>
 
       <p className="text-sm text-ink-muted mb-6">
-        We&apos;ll confirm your booking shortly
+        The resort will confirm your booking and payment details.
       </p>
 
       {/* Big booking code */}
@@ -137,8 +137,8 @@ export default function SuccessScreen({
       {/* Urgency line */}
       <div className="rounded-touch bg-amber-50 border border-amber-200 px-4 py-3 mb-6 inline-block">
         <p className="text-sm text-amber-700">
-          Slot held until <strong>{getSlotDeadline()}</strong> — please complete
-          payment before then
+          Slot held until <strong>{getSlotDeadline()}</strong> — the resort
+          will confirm your booking and payment details
         </p>
       </div>
 

@@ -1,7 +1,6 @@
 "use client";
 
 import type { GuestDetails } from "./GuestDetailsForm";
-import type { PaymentData } from "./PaymentChoice";
 
 interface BookingConfirmationProps {
   packageName: string;
@@ -9,9 +8,7 @@ interface BookingConfirmationProps {
   pax: number;
   pricePerPax: number;
   totalAmount: number;
-  downpaymentPct: number;
   guestDetails: GuestDetails;
-  paymentData: PaymentData;
   onBack: () => void;
   onSubmit: () => void;
   submitting: boolean;
@@ -34,17 +31,12 @@ export default function BookingConfirmation({
   pax,
   pricePerPax,
   totalAmount,
-  downpaymentPct,
   guestDetails,
-  paymentData,
   onBack,
   onSubmit,
   submitting,
   error,
 }: BookingConfirmationProps) {
-  const downpaymentAmount = Math.round(totalAmount * (downpaymentPct / 100));
-  const isGcash = paymentData.method === "gcash";
-
   return (
     <div className="px-4 pt-4 pb-40 space-y-5">
       <h2 className="font-heading font-bold text-lg text-center">
@@ -60,13 +52,6 @@ export default function BookingConfirmation({
         <div className="border-t border-gray-100 pt-2">
           <Row label="Total" value={`₱${totalAmount.toLocaleString("en-PH")}`} bold />
         </div>
-        {downpaymentPct < 100 && (
-          <Row
-            label={`Downpayment (${downpaymentPct}%)`}
-            value={`₱${downpaymentAmount.toLocaleString("en-PH")}`}
-            muted
-          />
-        )}
       </div>
 
       {/* Guest info card */}
@@ -83,29 +68,12 @@ export default function BookingConfirmation({
         {guestDetails.notes && <Row label="Notes" value={guestDetails.notes} />}
       </div>
 
-      {/* Payment info card */}
-      <div className="rounded-touch border border-gray-200 bg-white p-4 space-y-2">
-        <h3 className="font-heading font-semibold text-sm text-ink-muted mb-2">
-          Payment
-        </h3>
-        <Row
-          label="Method"
-          value={isGcash ? "GCash" : "Pay on-site"}
-        />
-        {isGcash && (
-          <>
-            <Row label="Ref#" value={paymentData.gcash_ref} />
-            {paymentData.screenshot_url && (
-              <div className="mt-2">
-                <img
-                  src={paymentData.screenshot_url}
-                  alt="Payment screenshot"
-                  className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                />
-              </div>
-            )}
-          </>
-        )}
+      {/* Payment note — owner handles payment offline after confirming */}
+      <div className="rounded-touch border border-gray-200 bg-white p-4">
+        <p className="text-sm text-ink-muted">
+          No payment needed now. The resort will confirm your booking and
+          payment details.
+        </p>
       </div>
 
       {/* Error */}

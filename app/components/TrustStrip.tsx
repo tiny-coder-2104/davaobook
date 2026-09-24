@@ -1,13 +1,15 @@
+import Link from "next/link";
 import type { Operator } from "../../lib/types";
 
 export default function TrustStrip({ operator }: { operator: Operator | null }) {
   const title = operator?.name ?? "SeaClouds Mountain View Resort";
+  const brandHref = operator?.slug ? `/${operator.slug}` : "/";
 
   return (
     <header className="mb-8">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-        {/* Branding left */}
-        <div className="flex gap-3">
+        {/* Branding left — links to this operator's landing */}
+        <Link href={brandHref} className="flex gap-3">
           {/* ponytail: gray placeholder box, emoji keeps it zero-asset */}
           <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border bg-gray-200">
             <span aria-hidden="true" className="text-base leading-none">
@@ -22,7 +24,7 @@ export default function TrustStrip({ operator }: { operator: Operator | null }) 
               {title}
             </h1>
             <p className="mt-0.5 text-sm text-ink-muted">
-              Confirmed bookings • Instant SMS updates • Easy online payments
+              Confirmed bookings • Instant SMS updates • Easy online booking
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
@@ -35,7 +37,7 @@ export default function TrustStrip({ operator }: { operator: Operator | null }) 
               </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* CTAs right: stacked mobile, row desktop */}
         <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">

@@ -7,6 +7,7 @@ import { sendSMS, expiryMessage, reminderMessage, shouldSend } from "@/lib/sms";
  *
  * Rules (spec §5):
  *  1. PENDING_PAYMENT > 24h → EXPIRED + apology SMS + slot freed
+ *     (LEGACY: no new bookings land here since 0009; kept for pre-0009 rows)
  *  2. PENDING_CONFIRMATION > 48h → auto-decline (silent)
  *  3. CONFIRMED where tour_date = tomorrow → reminder SMS
  *

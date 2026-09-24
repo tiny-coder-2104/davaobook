@@ -21,13 +21,6 @@ export default async function BookPackage({
 
   const pkgData = pkg as Package;
 
-  // Fetch operator data for GCash details
-  const { data: operator } = await supabase
-    .from("operators")
-    .select("gcash_qr_url, gcash_number")
-    .eq("id", pkgData.operator_id)
-    .single();
-
   return (
     <main className="max-w-3xl mx-auto">
       {/* Header */}
@@ -38,15 +31,12 @@ export default async function BookPackage({
         </p>
       </div>
 
-      {/* Full booking flow: picker → form → payment → confirm → success */}
+      {/* Full booking flow: picker → details → confirm → success */}
       <BookingFormFlow
         pkgId={pkgData.id}
         pkgSlug={pkgData.slug}
         pkgName={pkgData.name}
         tiers={pkgData.tiers}
-        downpaymentPct={pkgData.downpayment_pct}
-        operatorGcashQrUrl={operator?.gcash_qr_url ?? null}
-        operatorGcashNumber={operator?.gcash_number ?? null}
       />
     </main>
   );
