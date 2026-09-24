@@ -7,6 +7,7 @@ import BookingCard, {
 import BookingDetailSheet from "@/app/components/BookingDetailSheet";
 import SkeletonCard from "@/app/components/SkeletonCard";
 import { type BookingStatus } from "@/lib/transitions";
+import StatCard from "@/app/components/StatCard";
 
 type Filter = "all" | BookingStatus;
 
@@ -21,12 +22,20 @@ const FILTERS: { key: Filter; label: string }[] = [
 interface TodayResponse {
   bookings: BookingRow[];
   pending_count: number;
+  confirmed_today: number;
+  upcoming_7d: number;
+  revenue_this_month: number;
   date: string;
 }
 
 export default function AdminToday() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [stats, setStats] = useState({
+    confirmed_today: 0,
+    upcoming_7d: 0,
+    revenue_this_month: 0,
+  });
   const [filter, setFilter] = useState<Filter>("all");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<BookingRow | null>(null);
@@ -46,6 +55,11 @@ export default function AdminToday() {
         const data: TodayResponse = await res.json();
         setBookings(data.bookings);
         setPendingCount(data.pending_count);
+        setStats({
+          confirmed_today: data.confirmed_today ?? 0,
+          upcoming_7d: data.upcoming_7d ?? 0,
+          revenue_this_month: data.revenue_this_month ?? 0,
+        });
       }
     } finally {
       setLoading(false);
@@ -93,6 +107,17 @@ export default function AdminToday() {
 
   return (
     <div className="space-y-4">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Pending" value={String(pendingCount)} />
+        <StatCard label="Confirmed today" value={String(stats.confirmed_today)} />
+        <StatCard label="Upcoming 7 days" value={String(stats.upcoming_7d)} />
+        <StatCard
+          label="Revenue this month"
+          value={`₱${stats.revenue_this_month.toLocaleString()}`}
+        />
+      </div>
+
       {/* Pending badge */}
       {pendingCount > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-touch bg-amber-50 border border-amber-200">

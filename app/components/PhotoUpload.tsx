@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { createBrowserClient } from "@/lib/supabase-browser";
 
 /* ── Types ── */
 
@@ -10,48 +9,12 @@ interface PhotoUploadProps {
   value: string | null;
   /** Called when a new photo URL is set (or null to clear) */
   onChange: (url: string | null) => void;
-  /** Storage bucket name */
-  bucket?: string;
-}
-
-/* ── Client-side thumbnail resize ── */
-
-function createThumbnail(file: File, maxSize = 200): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const canvas = document.createElement("canvas");
-      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Canvas not supported"));
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
-        "image/jpeg",
-        0.8
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-    img.src = url;
-  });
 }
 
 /* ── Component ── */
 
-export default function PhotoUpload({
-  value,
-  onChange,
-  bucket = "screenshots",
-}: PhotoUploadProps) {
+export default function PhotoUpload({ value, onChange }: PhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -62,37 +25,33 @@ export default function PhotoUpload({
 
       setUploading(true);
       setError(null);
-      setProgress(0);
 
       try {
-        const supabase = createBrowserClient();
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `packages/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        // Read as data URL, POST to the server-side upload route (service-role
+        // key, operator-scoped — same auth as every other /api/admin route).
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(file);
+        });
 
-        // Upload original
-        const { error: uploadErr } = await supabase.storage
-          .from(bucket)
-          .upload(path, file, { upsert: false });
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: file.name, base64 }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
 
-        if (uploadErr) throw new Error(uploadErr.message);
-
-        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-        if (!urlData?.publicUrl) throw new Error("Failed to get public URL");
-
-        // Also upload thumbnail (client-side resize)
-        const thumb = await createThumbnail(file, 200);
-        const thumbPath = `packages/thumb_${path}`;
-        await supabase.storage.from(bucket).upload(thumbPath, thumb, { upsert: false });
-
-        setProgress(100);
-        onChange(urlData.publicUrl);
+        onChange(data.url);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
       } finally {
         setUploading(false);
       }
     },
-    [bucket, onChange]
+    [onChange]
   );
 
   const handleDrop = useCallback(
@@ -145,15 +104,7 @@ export default function PhotoUpload({
             hover:border-brand hover:bg-brand/5 transition-colors"
         >
           {uploading ? (
-            <>
-              <div className="text-sm text-ink-muted">Uploading... {progress}%</div>
-              <div className="w-48 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-brand rounded-full transition-all"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </>
+            <div className="text-sm text-ink-muted">Uploading…</div>
           ) : (
             <>
               <svg className="w-8 h-8 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">

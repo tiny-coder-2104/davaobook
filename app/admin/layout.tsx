@@ -7,6 +7,7 @@ import { createBrowserClient } from "@/lib/supabase-browser";
 
 const NAV = [
   { href: "/admin/today", label: "Today", icon: "📋" },
+  { href: "/admin/insights", label: "Insights", icon: "📊" },
   { href: "/admin/bookings", label: "Bookings", icon: "📦" },
   { href: "/admin/calendar", label: "Calendar", icon: "📅" },
   { href: "/admin/packages", label: "Packages", icon: "⛰️" },
