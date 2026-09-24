@@ -60,9 +60,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Popular packages — top 5 by booking count.
+  // packages!inner returns an array of joined rows; each booking has exactly
+  // one package (FK), so [0] is the package.
   const pkgCounts = new Map<string, number>();
   for (const b of all) {
-    const name = b.packages?.name;
+    const name = b.packages?.[0]?.name;
     if (!name) continue;
     pkgCounts.set(name, (pkgCounts.get(name) ?? 0) + 1);
   }
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest) {
   // operator wants all-status occupancy, drop the filter.
   const active = all.filter(
     (b) =>
-      b.packages?.capacity_per_day &&
+      b.packages?.[0]?.capacity_per_day &&
       !["CANCELLED", "DECLINED", "EXPIRED"].includes(b.status)
   );
   const occupancy_rate =
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
       ? 0
       : Math.round(
           (active.reduce(
-            (sum, b) => sum + b.pax / (b.packages?.capacity_per_day ?? 1),
+            (sum, b) => sum + b.pax / (b.packages?.[0]?.capacity_per_day ?? 1),
             0
           ) /
             active.length) *
