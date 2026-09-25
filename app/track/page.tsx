@@ -27,7 +27,9 @@ const STATUS_LABELS: Record<string, string> = {
 // Booking code shape: {PKG-SLUG}-{MMDD}-{GUEST-NAME-FIRST-4}, e.g. STAND-0826-JUAN.
 // Matches lib/booking-code.ts generateBookingCode() / SQL generate_booking_code().
 // Slug = first 5 chars of package slug, name = first 4 alphanumeric chars.
-const BOOKING_CODE_RE = /^[A-Z0-9]{1,5}-\d{4}-[A-Z0-9]{1,4}$/i;
+// Name segment can be EMPTY (legacy rows like FAMIL-0926- were created with a
+// blank/non-Latin guest name) — accept 0 chars so those codes stay trackable.
+const BOOKING_CODE_RE = /^[A-Z0-9]{1,5}-\d{4}-[A-Z0-9]{0,4}$/i;
 
 function formatDisplayDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");

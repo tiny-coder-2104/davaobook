@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!package_id) missing.push("package_id");
     if (!tour_date) missing.push("tour_date");
     if (pax == null) missing.push("pax");
-    if (!guest_name) missing.push("guest_name");
+    if (!guest_name?.trim()) missing.push("guest_name");
     if (!guest_mobile) missing.push("guest_mobile");
     if (!guest_pickup_area) missing.push("guest_pickup_area");
 
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         p_package_id: package_id,
         p_tour_date: tour_date,
         p_pax: pax,
-        p_guest_name: guest_name,
+        p_guest_name: guest_name.trim(),
         p_guest_mobile: guest_mobile,
         p_guest_email: guest_email || null,
         p_guest_pickup_area: guest_pickup_area,
