@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
-// Status pages must reflect the CURRENT row on every request. Without this,
-// the supabaseAdmin fetch defaults to force-cache and the guest sees the
+// Status pages must reflect the CURRENT row on every request. force-dynamic
+// alone did NOT suffice on Next 14.2: the supabase fetch kept force-cache
+// semantics and the Data Cache persists across deployments — guests saw the
 // status as of their FIRST load forever (QA 0043: weather-cancel invisible,
-// deleted codes kept serving 200).
+// deleted codes kept serving 200 with a fresh rebuild around stale data).
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 interface PageProps {
   params: { code: string };

@@ -3,6 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 import VoucherCard, { type VoucherData } from "../../components/VoucherCard";
 import type { Metadata } from "next";
 
+// Voucher shows live booking status — same staleness class as /b/[code]
+// (QA 0043): force-dynamic alone doesn't stop the supabase fetch cache.
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 interface PageProps {
   params: { code: string };
 }
