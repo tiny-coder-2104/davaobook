@@ -12,7 +12,6 @@ type Filter = "all" | BookingStatus;
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "PENDING_PAYMENT", label: "Pending Payment" },
   { key: "PENDING_CONFIRMATION", label: "Needs Confirm" },
   { key: "CONFIRMED", label: "Confirmed" },
   { key: "CANCELLED", label: "Cancelled" },

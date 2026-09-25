@@ -12,6 +12,7 @@ const NAV = [
   { href: "/admin/calendar", label: "Calendar", icon: "📅" },
   { href: "/admin/packages", label: "Packages", icon: "⛰️" },
   { href: "/admin/new-booking", label: "New Booking", icon: "➕" },
+  { href: "/admin/help", label: "How to use", icon: "❓" },
 ];
 
 /** Clears Supabase auth cookies and routes to the login screen. */

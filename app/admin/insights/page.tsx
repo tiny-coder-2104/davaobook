@@ -12,7 +12,6 @@ interface Insights {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING_PAYMENT: "Pending payment",
   PENDING_CONFIRMATION: "Needs confirm",
   CONFIRMED: "Confirmed",
   CANCELLED: "Cancelled",
@@ -22,7 +21,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_DOTS: Record<string, string> = {
-  PENDING_PAYMENT: "bg-status-pending",
   PENDING_CONFIRMATION: "bg-status-pending",
   CONFIRMED: "bg-status-confirmed",
   CANCELLED: "bg-status-cancelled",
@@ -79,15 +77,28 @@ export default function AdminInsights() {
 
   return (
     <div className="space-y-4">
-      {/* Stat cards */}
+      {/* Stat cards — all-time unless the sub says otherwise */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           label="Total revenue"
           value={`₱${data.total_revenue.toLocaleString()}`}
+          sub="Confirmed bookings, all time"
         />
-        <StatCard label="Total bookings" value={String(totalBookings)} />
-        <StatCard label="Pending" value={String(pending)} />
-        <StatCard label="Occupancy" value={`${data.occupancy_rate}%`} />
+        <StatCard
+          label="Total bookings"
+          value={String(totalBookings)}
+          sub="All time"
+        />
+        <StatCard
+          label="Pending"
+          value={String(pending)}
+          sub="Awaiting your confirmation"
+        />
+        <StatCard
+          label="Occupancy"
+          value={`${data.occupancy_rate}%`}
+          sub="Avg. how full booked stays are"
+        />
       </div>
 
       {/* Revenue by month — plain div bars, no chart lib */}
@@ -95,6 +106,9 @@ export default function AdminInsights() {
         <h3 className="font-heading font-semibold text-ink">
           Revenue by month
         </h3>
+        <p className="text-xs text-ink-muted mt-0.5">
+          Last 6 months · confirmed bookings only
+        </p>
         <div className="mt-4 space-y-3">
           {Object.entries(data.revenue_by_month).map(([month, amount]) => (
             <div key={month}>
