@@ -61,9 +61,12 @@ export default async function PackageDetail({
 
   const pkgData = pkg as Package;
 
+  // Public columns only — must stay ⊆ the GRANT set in
+  // supabase/migrations/009_operators_public_grants.sql (a wildcard SELECT
+  // fails under column-level grants; phone/email/gcash are private).
   const { data: operators } = await supabase
     .from("operators")
-    .select("*")
+    .select("id, name, slug, logo_url, brand_color, verified, created_at")
     .eq("id", pkgData.operator_id)
     .single();
 

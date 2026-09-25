@@ -27,14 +27,28 @@ export default function BookingPicker({
 
   const { availabilityMap, loading } = useAvailability(pkgSlug, month, year);
 
-  // Max pax from the highest tier
-  const maxPax = useMemo(() => {
+  // Max pax from the highest tier, capped by the selected date's remaining
+  // capacity (both in PAX units — matches create_booking_transactional's
+  // SUM(pax) + p_pax > capacity_per_day check). QA davaobook-0037.
+  const tierMaxPax = useMemo(() => {
     if (tiers.length === 0) return 10; // fallback
     return Math.max(...tiers.map((t) => t.max_pax));
   }, [tiers]);
 
+  const remaining = selectedDate
+    ? availabilityMap[selectedDate]?.remaining
+    : undefined;
+  const maxPax =
+    selectedDate && remaining !== undefined
+      ? Math.max(1, Math.min(tierMaxPax, remaining))
+      : tierMaxPax;
+  const effectivePax = Math.min(pax, maxPax);
+
   // Price calculation
-  const pricing = useMemo(() => calculateTierPrice(tiers, pax), [tiers, pax]);
+  const pricing = useMemo(
+    () => calculateTierPrice(tiers, effectivePax),
+    [tiers, effectivePax]
+  );
 
   const prevMonth = () => {
     setSelectedDate(null);
@@ -77,7 +91,12 @@ export default function BookingPicker({
         <h3 className="font-heading font-semibold text-base mb-3 text-center">
           Number of guests
         </h3>
-        <PaxStepper value={pax} min={1} max={maxPax} onChange={setPax} />
+        <PaxStepper value={effectivePax} min={1} max={maxPax} onChange={setPax} />
+        {selectedDate && remaining !== undefined && remaining < tierMaxPax && (
+          <p className="mt-2 text-center text-xs text-ink-muted">
+            {remaining} guest{remaining === 1 ? "" : "s"} left on this date
+          </p>
+        )}
       </section>
 
       {/* Selected date display */}
@@ -102,11 +121,13 @@ export default function BookingPicker({
                 <span className="font-medium text-ink">
                   ₱{pricing.total.toLocaleString("en-PH")}
                 </span>
-                <span className="ml-1">for {pax} guest{pax === 1 ? "" : "s"}</span>
+                <span className="ml-1">
+                  for {effectivePax} guest{effectivePax === 1 ? "" : "s"}
+                </span>
               </div>
             </div>
             <button
-              onClick={() => onContinue(selectedDate, pax)}
+              onClick={() => onContinue(selectedDate, effectivePax)}
               className="w-full btn-primary"
             >
               Continue
@@ -116,13 +137,14 @@ export default function BookingPicker({
           /* Live total when no continue callback or no date */
           <LiveTotal
             pricePerPax={pricing.pricePerPax}
-            pax={pax}
+            pax={effectivePax}
             total={pricing.total}
           />
-        ) : pax > 0 ? (
+        ) : effectivePax > 0 ? (
           /* No tier match warning */
           <div className="w-full bg-white border-t border-gray-200 px-4 py-3 text-center text-red-500 text-sm font-medium">
-            No pricing tier for {pax} guest{pax === 1 ? "" : "s"}
+            No pricing tier for {effectivePax} guest
+            {effectivePax === 1 ? "" : "s"}
           </div>
         ) : null}
       </div>

@@ -29,9 +29,10 @@ export default function PaxStepper({
       return;
     }
     const parsed = parseInt(raw, 10);
-    if (!isNaN(parsed) && parsed >= min && parsed <= max) {
-      onChange(parsed);
-    }
+    if (isNaN(parsed)) return;
+    // Clamp instead of ignoring — typing 7 with max 6 must land on 6,
+    // never silently reset to min. (QA davaobook-0037)
+    onChange(Math.min(Math.max(parsed, min), max));
   };
 
   return (

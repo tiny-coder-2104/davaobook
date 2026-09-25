@@ -50,6 +50,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // guest_name length cap (QA davaobook-0041)
+    if (guest_name.trim().length > 100) {
+      return NextResponse.json(
+        { error: "guest_name must be 100 characters or fewer" },
+        { status: 400 }
+      );
+    }
+
     // Call the transactional database function
     const { data, error } = await supabaseAdmin.rpc(
       "create_booking_transactional",

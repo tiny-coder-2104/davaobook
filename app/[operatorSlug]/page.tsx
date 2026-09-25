@@ -12,9 +12,12 @@ export default async function OperatorLanding({
 }: {
   params: { operatorSlug: string };
 }) {
+  // Public columns only — must stay ⊆ the GRANT set in
+  // supabase/migrations/009_operators_public_grants.sql (a wildcard SELECT
+  // fails under column-level grants; phone/email/gcash are private).
   const { data: operator } = await supabase
     .from("operators")
-    .select("*")
+    .select("id, name, slug, logo_url, brand_color, verified, created_at")
     .eq("slug", params.operatorSlug)
     .single();
 

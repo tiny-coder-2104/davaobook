@@ -60,20 +60,23 @@ export async function GET(
       }
     }
 
-    // 3. Fetch active booking counts for the month
+    // 3. Fetch active bookings for the month — summed as PAX, not row count,
+    //    so "remaining" matches the SQL check (SUM(pax) + p_pax > capacity).
+    //    Row counts made the picker disagree with the server after 007.
     const { data: bookingRows } = await supabaseAdmin
       .from("bookings")
-      .select("tour_date")
+      .select("tour_date, pax")
       .eq("package_id", pkg.id)
       .gte("tour_date", monthStart)
       .lte("tour_date", monthEnd)
       .in("status", ["PENDING_PAYMENT", "PENDING_CONFIRMATION", "CONFIRMED"]);
 
-    // Count bookings per date
-    const bookedCounts: Record<string, number> = {};
+    // Count booked PAX per date
+    const bookedPax: Record<string, number> = {};
     if (bookingRows) {
       for (const row of bookingRows) {
-        bookedCounts[row.tour_date] = (bookedCounts[row.tour_date] ?? 0) + 1;
+        bookedPax[row.tour_date] =
+          (bookedPax[row.tour_date] ?? 0) + (row.pax ?? 0);
       }
     }
 
@@ -93,7 +96,7 @@ export async function GET(
         continue;
       }
 
-      const booked = bookedCounts[dateStr] ?? 0;
+      const booked = bookedPax[dateStr] ?? 0;
       const remaining = Math.max(0, capacity - booked);
 
       let status: string;

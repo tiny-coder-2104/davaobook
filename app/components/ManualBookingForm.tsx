@@ -234,6 +234,7 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
             </label>
             <input
               type="text"
+              maxLength={100}
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
               placeholder="Juan Dela Cruz"

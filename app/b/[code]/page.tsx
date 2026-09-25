@@ -44,7 +44,7 @@ function formatDisplayDate(dateStr: string): string {
 export default async function BookingStatusPage({ params }: PageProps) {
   const { data, error } = await supabaseAdmin
     .from("bookings")
-    .select("code, status, tour_date, pax, total_amount, packages(name)")
+    .select("code, status, tour_date, pax, total_amount, cancelled_reason, packages(name)")
     .eq("code", params.code.toUpperCase())
     .single();
 
@@ -57,6 +57,8 @@ export default async function BookingStatusPage({ params }: PageProps) {
   const status = data.status as string;
   const label = STATUS_LABELS[status] ?? status;
   const style = STATUS_STYLES[status] ?? "bg-gray-100 text-gray-500";
+  const weatherCancelled =
+    status === "CANCELLED" && data.cancelled_reason === "WEATHER";
 
   return (
     <main className="px-4 py-8 min-h-screen bg-gray-50">
@@ -72,6 +74,15 @@ export default async function BookingStatusPage({ params }: PageProps) {
               {label}
             </span>
           </div>
+
+          {/* Weather-cancel reason (only when cancelled_reason = WEATHER;
+              plain operator cancels keep the original presentation) */}
+          {weatherCancelled && (
+            <div className="mb-4 rounded-touch border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm text-sky-800">
+              Cancelled due to bad weather — contact the resort about
+              rebooking or refunds.
+            </div>
+          )}
 
           <div className="space-y-3 text-sm">
             <div className="flex justify-between gap-4">

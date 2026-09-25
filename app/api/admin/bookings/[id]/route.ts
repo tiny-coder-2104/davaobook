@@ -63,6 +63,8 @@ export async function PATCH(
       targetStatus = "CONFIRMED";
       break;
     case "cancel":
+      // Plain operator cancel: cancelled_reason stays NULL (only the weather
+      // route sets it) so the guest page shows the plain CANCELLED look.
       if (!["PENDING_CONFIRMATION", "CONFIRMED"].includes(currentStatus)) {
         return NextResponse.json(
           { error: `Cannot cancel from ${currentStatus}` },

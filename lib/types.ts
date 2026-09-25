@@ -3,8 +3,11 @@ export interface Operator {
   name: string;
   slug: string;
   logo_url: string | null;
-  phone: string;
-  email: string;
+  // phone/email are PRIVATE (not in the anon GRANT set — see supabase/
+  // migrations/009_operators_public_grants.sql). Public pages never fetch
+  // them; server routes read them via service_role, so treat as optional.
+  phone?: string;
+  email?: string;
   verified: boolean;
   created_at: string;
 }

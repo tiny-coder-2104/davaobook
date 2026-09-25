@@ -40,8 +40,8 @@ function validate(fields: GuestDetails): FieldError {
 
 /* ── Component ── */
 
-const FIELDS: { key: keyof GuestDetails; label: string; type: string; inputMode?: string; required: boolean }[] = [
-  { key: "name", label: "Full Name", type: "text", required: true },
+const FIELDS: { key: keyof GuestDetails; label: string; type: string; inputMode?: string; required: boolean; maxLength?: number }[] = [
+  { key: "name", label: "Full Name", type: "text", required: true, maxLength: 100 },
   { key: "mobile", label: "Mobile Number", type: "tel", inputMode: "tel", required: true },
   { key: "email", label: "Email", type: "email", inputMode: "email", required: false },
   { key: "pickup_area", label: "Pickup Area", type: "text", required: false },
@@ -122,6 +122,7 @@ export default function GuestDetailsForm({
             id={field.key}
             type={field.type}
             inputMode={field.inputMode as React.HTMLAttributes<HTMLInputElement>["inputMode"]}
+            maxLength={field.maxLength}
             value={fields[field.key]}
             onChange={(e) => updateField(field.key, e.target.value)}
             onBlur={() => handleBlur(field.key)}

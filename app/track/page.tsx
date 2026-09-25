@@ -24,12 +24,15 @@ const STATUS_LABELS: Record<string, string> = {
   NO_SHOW: "No Show",
 };
 
-// Booking code shape: {PKG-SLUG}-{MMDD}-{GUEST-NAME-FIRST-4}, e.g. STAND-0826-JUAN.
-// Matches lib/booking-code.ts generateBookingCode() / SQL generate_booking_code().
-// Slug = first 5 chars of package slug, name = first 4 alphanumeric chars.
-// Name segment can be EMPTY (legacy rows like FAMIL-0926- were created with a
-// blank/non-Latin guest name) — accept 0 chars so those codes stay trackable.
-const BOOKING_CODE_RE = /^[A-Z0-9]{1,5}-\d{4}-[A-Z0-9]{0,4}$/i;
+// Booking code shape: {PKG-SLUG}-{MMDD}-{GUEST-NAME}[-N], e.g. STAND-0826-JUAN.
+// Source of truth: supabase/migrations/002_create_booking_fn.sql (calls
+// generate_booking_code) + 003_fix_booking_code_empty_name.sql.
+//   slug  = first 5 chars of package slug  → [A-Z0-9]{1,5}
+//   name  = first 4 alphanumeric chars, or the literal GUEST fallback (5 chars)
+//           and may be EMPTY for legacy blank/non-Latin names (FAMIL-0926-)
+//   -N    = collision suffix appended when the base code already exists
+//           (FAMIL-1010-W-1 → 4 segments)
+const BOOKING_CODE_RE = /^[A-Z0-9]{1,5}-\d{4}-[A-Z0-9]{0,5}(-\d+)?$/i;
 
 function formatDisplayDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -52,10 +55,20 @@ export default function TrackPage() {
     const value = input.trim();
     if (!value) return;
 
-    // Booking-code-shaped input → direct status page; anything else (incl.
-    // hyphenated emails like mary-jane@example.com) → email lookup.
+    // Booking-code-shaped input → direct status page. Hyphenated emails like
+    // mary-jane@example.com never match the code shape, so they still fall
+    // through to the email lookup below.
     if (BOOKING_CODE_RE.test(value)) {
       router.push(`/b/${value.toUpperCase()}`);
+      return;
+    }
+
+    // Neither a code nor an email — don't waste a lookup on garbage input.
+    if (!value.includes("@")) {
+      setBookings(null);
+      setError(
+        "That doesn't look like a booking code or an email. Codes look like STAND-0826-JUAN or STAND-1014-GUEST."
+      );
       return;
     }
 

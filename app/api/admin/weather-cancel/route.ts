@@ -63,10 +63,12 @@ export async function POST(request: NextRequest) {
   const origin = request.nextUrl.origin;
 
   for (const booking of bookings) {
-    // 2. Update status to CANCELLED (optimistic lock)
+    // 2. Update status to CANCELLED (optimistic lock) + record WHY, so the
+    //    guest status page can distinguish weather cancels from plain
+    //    operator cancels (QA davaobook-0038). Plain cancel leaves it NULL.
     const { error: updateErr } = await supabaseAdmin
       .from("bookings")
-      .update({ status: "CANCELLED" })
+      .update({ status: "CANCELLED", cancelled_reason: "WEATHER" })
       .eq("id", booking.id)
       .eq("status", booking.status);
 
