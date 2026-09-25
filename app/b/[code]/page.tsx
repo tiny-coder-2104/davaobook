@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
+// Status pages must reflect the CURRENT row on every request. Without this,
+// the supabaseAdmin fetch defaults to force-cache and the guest sees the
+// status as of their FIRST load forever (QA 0043: weather-cancel invisible,
+// deleted codes kept serving 200).
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: { code: string };
 }
