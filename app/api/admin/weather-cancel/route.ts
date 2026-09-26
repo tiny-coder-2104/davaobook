@@ -25,13 +25,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "date is required" }, { status: 400 });
   }
 
-  // 1. Fetch active bookings for this date
+  // 1. Fetch active bookings whose STAY covers that date — range overlap
+  //    (tour_date <= date < end_date), so an in-house multi-night stay is
+  //    caught too, not just same-day check-ins.
   let query = supabaseAdmin
     .from("bookings")
     .select(
-      "id, code, guest_name, mobile, tour_date, pax, status, package_id, packages!inner(name, operator_id, slug)"
+      "id, code, guest_name, mobile, tour_date, end_date, pax, status, package_id, packages!inner(name, operator_id, slug)"
     )
-    .eq("tour_date", date)
+    .lte("tour_date", date)
+    .gt("end_date", date)
     .in("status", ["PENDING_PAYMENT", "PENDING_CONFIRMATION", "CONFIRMED"])
     .eq("packages.operator_id", operatorId);
 
@@ -115,8 +118,14 @@ export async function POST(request: NextRequest) {
       const pkgName = pkg?.name ?? "your stay";
       const rebookUrl = `${origin}/p/${pkg?.slug ?? ""}`;
 
+      // Single-day: "booking on <date>". Multi-night: "stay <from> to <to>".
+      const stayPhrase =
+        booking.end_date && booking.end_date !== booking.tour_date
+          ? `stay from ${booking.tour_date} to ${booking.end_date}`
+          : `booking on ${booking.tour_date}`;
+
       const message =
-        `Hi ${booking.guest_name}, your ${pkgName} booking on ${booking.tour_date} has been cancelled due to weather. ` +
+        `Hi ${booking.guest_name}, your ${pkgName} ${stayPhrase} has been cancelled due to weather. ` +
         `We apologize for the inconvenience.\n` +
         `Rebook here: ${rebookUrl}\n` +
         `Booking code: ${booking.code}`;

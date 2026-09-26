@@ -23,6 +23,7 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
   const [selectedPkg, setSelectedPkg] = useState<Package | null>(null);
   const [tourDate, setTourDate] = useState("");
   const [pax, setPax] = useState(1);
+  const [nights, setNights] = useState(1);
 
   // Guest details
   const [guestName, setGuestName] = useState("");
@@ -54,8 +55,8 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
   // Price calculation
   const pricing = useMemo(() => {
     if (!selectedPkg) return null;
-    return calculateTierPrice(selectedPkg.tiers, pax);
-  }, [selectedPkg, pax]);
+    return calculateTierPrice(selectedPkg.tiers, pax, nights);
+  }, [selectedPkg, pax, nights]);
 
   const totalAmount = pricing?.total ?? 0;
   const downpaymentAmount = selectedPkg
@@ -86,6 +87,7 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
           package_id: selectedPkg.id,
           tour_date: tourDate,
           pax,
+          nights,
           guest_name: guestName.trim(),
           guest_mobile: guestMobile.trim(),
           guest_email: guestEmail.trim() || null,
@@ -192,6 +194,28 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
                 className="w-full min-h-[48px] px-3 rounded-touch border-2 border-gray-200 bg-white text-ink text-base
                   focus:border-brand focus:outline-none transition-colors"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1">
+                Nights <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={nights}
+                onChange={(e) => setNights(parseInt(e.target.value) || 1)}
+                className="w-full min-h-[48px] px-3 rounded-touch border-2 border-gray-200 bg-white text-ink text-base
+                  focus:outline-none transition-colors"
+              >
+                <option value={1}>1 night</option>
+                {selectedPkg.max_nights > 1 && (
+                  <>
+                    {Array.from({ length: selectedPkg.max_nights - 1 }, (_, i) => i + 2).map((n) => (
+                      <option key={n} value={n}>
+                        {n} night{n === 1 ? "" : "s"}
+                      </option>
+                    ))}
+                  </>
+                )}
+              </select>
             </div>
           </div>
         )}

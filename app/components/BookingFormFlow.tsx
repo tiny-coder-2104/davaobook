@@ -16,6 +16,8 @@ interface BookingFormFlowProps {
   pkgSlug: string;
   pkgName: string;
   tiers: PackageTier[];
+  /** packages.max_nights — 1 (default) = single-night only, no nights stepper. */
+  maxNights?: number;
 }
 
 type FlowStep = "picker" | "details" | "confirm" | "success";
@@ -29,27 +31,34 @@ export default function BookingFormFlow({
   pkgSlug,
   pkgName,
   tiers,
+  maxNights = 1,
 }: BookingFormFlowProps) {
   const [step, setStep] = useState<FlowStep>("picker");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [pax, setPax] = useState(1);
+  const [nights, setNights] = useState(1);
   const [guestDetails, setGuestDetails] = useState<GuestDetails | null>(null);
 
-  // Pricing (re-derive from tier)
+  // Pricing (re-derive from tier). Flat nightly rate x nights — matches the
+  // server's tier_price * p_nights in create_booking_transactional.
   const pricing = tiers.find((t) => pax >= t.min_pax && pax <= t.max_pax);
-  const totalAmount = pricing ? pricing.price_per_pax : 0; // flat per-night rate
   const pricePerPax = pricing?.price_per_pax ?? 0;
+  const totalAmount = pricePerPax * nights;
 
   // Booking result
   const [bookingCode, setBookingCode] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handlePickerContinue = useCallback((date: string, paxCount: number) => {
-    setSelectedDate(date);
-    setPax(paxCount);
-    setStep("details");
-  }, []);
+  const handlePickerContinue = useCallback(
+    (date: string, paxCount: number, nightCount = 1) => {
+      setSelectedDate(date);
+      setPax(paxCount);
+      setNights(Math.max(1, Math.min(maxNights, nightCount)));
+      setStep("details");
+    },
+    [maxNights]
+  );
 
   const handleDetailsSubmit = useCallback((details: GuestDetails) => {
     setGuestDetails(details);
@@ -72,6 +81,7 @@ export default function BookingFormFlow({
           package_id: pkgId,
           tour_date: selectedDate,
           pax,
+          nights,
           guest_name: guestDetails.name,
           guest_mobile: guestDetails.mobile,
           guest_email: guestDetails.email || null,
@@ -95,7 +105,7 @@ export default function BookingFormFlow({
     } finally {
       setSubmitting(false);
     }
-  }, [selectedDate, guestDetails, pkgId, pax]);
+  }, [selectedDate, guestDetails, pkgId, pax, nights]);
 
   // Progress bar index (0=details, 1=confirm)
   const progressIndex = step === "details" ? 0 : step === "confirm" ? 1 : -1;
@@ -116,6 +126,7 @@ export default function BookingFormFlow({
         <BookingPicker
           pkgSlug={pkgSlug}
           tiers={tiers}
+          maxNights={maxNights}
           onContinue={handlePickerContinue}
         />
       )}
@@ -133,6 +144,7 @@ export default function BookingFormFlow({
           packageName={pkgName}
           tourDate={selectedDate}
           pax={pax}
+          nights={nights}
           pricePerPax={pricePerPax}
           totalAmount={totalAmount}
           guestDetails={guestDetails}
@@ -147,6 +159,7 @@ export default function BookingFormFlow({
         <SuccessScreen
           bookingCode={bookingCode}
           tourDate={selectedDate}
+          nights={nights}
           packageName={pkgName}
           totalAmount={totalAmount}
         />

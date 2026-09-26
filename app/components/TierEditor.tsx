@@ -34,7 +34,7 @@ export default function TierEditor({ tiers, onChange }: TierEditorProps) {
   return (
     <div className="space-y-3">
       {/* Header row */}
-      <div className="grid grid-cols-[1fr_1fr_1.2fr_auto] gap-2 text-xs font-medium text-ink-muted px-1">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 text-xs font-medium text-ink-muted px-1">
         <span>Min Guests</span>
         <span>Max Guests</span>
         <span>Price/Night (₱)</span>
@@ -42,13 +42,13 @@ export default function TierEditor({ tiers, onChange }: TierEditorProps) {
       </div>
 
       {tiers.map((tier, i) => (
-        <div key={i} className="grid grid-cols-[1fr_1fr_1.2fr_auto] gap-2 items-center">
+        <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 items-center">
           <input
             type="number"
             min={1}
             value={tier.min_pax}
             onChange={(e) => updateTier(i, "min_pax", parseInt(e.target.value) || 1)}
-            className="min-h-[48px] px-2 rounded-touch border border-gray-300 text-sm
+            className="w-full min-w-0 min-h-[48px] px-2 rounded-touch border border-gray-300 text-sm
               focus:outline-none focus:ring-1 focus:ring-brand text-center"
           />
           <input
@@ -56,7 +56,7 @@ export default function TierEditor({ tiers, onChange }: TierEditorProps) {
             min={1}
             value={tier.max_pax}
             onChange={(e) => updateTier(i, "max_pax", parseInt(e.target.value) || 1)}
-            className="min-h-[48px] px-2 rounded-touch border border-gray-300 text-sm
+            className="w-full min-w-0 min-h-[48px] px-2 rounded-touch border border-gray-300 text-sm
               focus:outline-none focus:ring-1 focus:ring-brand text-center"
           />
           <input
@@ -64,7 +64,7 @@ export default function TierEditor({ tiers, onChange }: TierEditorProps) {
             min={0}
             value={tier.price_per_pax}
             onChange={(e) => updateTier(i, "price_per_pax", parseInt(e.target.value) || 0)}
-            className="min-h-[48px] px-2 rounded-touch border border-gray-300 text-sm
+            className="w-full min-w-0 min-h-[48px] px-2 rounded-touch border border-gray-300 text-sm
               focus:outline-none focus:ring-1 focus:ring-brand text-center"
           />
           <button

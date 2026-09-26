@@ -19,13 +19,16 @@ export async function GET(request: NextRequest) {
     timeZone: "Asia/Manila",
   }); // YYYY-MM-DD
 
+  // Stays covering today: check-in <= today < checkout (exclusive), so an
+  // in-house multi-night stay appears on every night it occupies.
   let query = supabaseAdmin
     .from("bookings")
     .select(
-      "id, code, tour_date, pax, total_amount, status, guest_name, mobile, email, pickup_area, notes, gcash_ref, screenshot_url, created_at, packages!inner(name, slug, operator_id)"
+      "id, code, tour_date, end_date, pax, total_amount, status, guest_name, mobile, email, pickup_area, notes, gcash_ref, screenshot_url, created_at, packages!inner(name, slug, operator_id)"
     )
     .eq("packages.operator_id", operatorId)
-    .eq("tour_date", today)
+    .lte("tour_date", today)
+    .gt("end_date", today)
     .order("created_at", { ascending: false });
 
   if (statusFilter) {
@@ -50,6 +53,8 @@ export async function GET(request: NextRequest) {
   ).length;
 
   // Upcoming next 7 days (tomorrow → +7), excluding terminal statuses.
+  // Check-in based ON PURPOSE: this counts ARRIVALS, not occupancy — an
+  // in-house stay is already counted in "today" above.
   // Manila has no DST, so fixed 24h offsets are safe.
   const fmt = (dt: Date) =>
     dt.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
@@ -69,7 +74,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: upcomingErr.message }, { status: 500 });
   }
 
-  // Revenue this month — confirmed bookings with tour_date in the current month.
+  // Revenue this month — confirmed bookings, attributed to their CHECK-IN
+  // month (matches insights revenue_by_month; a stay is billed on arrival).
   const monthStart = today.slice(0, 7) + "-01";
   const { data: monthBookings, error: monthErr } = await supabaseAdmin
     .from("bookings")

@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
 /**
- * POST /api/admin/upload — Upload a package photo to the public
- * `package-images` bucket. Body: { filename, base64 } where base64 is a
+ * POST /api/admin/upload — Upload an image to the public `package-images`
+ * bucket. Body: { filename, base64, kind? } where base64 is a
  * `data:image/…;base64,…` URL (no multipart — no deps).
+ *
+ * kind: "package" (default) → packages/ prefix; "brand" → brand/ prefix, for
+ * the operator logo / GCash QR. Fixed allowlist, never a caller-supplied path.
  *
  * Auth: x-operator-id header set by middleware from the verified session
  * (same pattern as every other /api/admin route). Uploads run with the
@@ -13,6 +16,7 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 
 const MAX_BYTES = 2 * 1024 * 1024; // 2MB
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const PREFIXES: Record<string, string> = { package: "packages", brand: "brand" };
 
 /** Cheap magic-byte sniff on the decoded binary — real content check, not just the data-URL prefix. */
 function sniffImage(buf: Buffer): boolean {
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { filename?: string; base64?: string };
+  let body: { filename?: string; base64?: string; kind?: string };
   try {
     body = await request.json();
   } catch {
@@ -54,6 +58,15 @@ export async function POST(request: NextRequest) {
   }
 
   const { filename, base64 } = body;
+  // Allowlisted kind, never a caller-supplied path segment.
+  const prefix = PREFIXES[body.kind ?? "package"];
+  if (!prefix) {
+    return NextResponse.json(
+      { error: `kind must be one of: ${Object.keys(PREFIXES).join(", ")}` },
+      { status: 400 }
+    );
+  }
+
   if (typeof base64 !== "string" || !base64.startsWith("data:image/")) {
     return NextResponse.json(
       { error: "base64 must be a data:image/… URL" },
@@ -88,7 +101,7 @@ export async function POST(request: NextRequest) {
   const raw = (filename ?? "photo").split(/[\\/]/).pop() ?? "photo";
   const clean = raw.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40) || "photo";
   const ext = mime === "image/jpeg" ? "jpg" : mime.split("/")[1];
-  const path = `packages/${Date.now()}-${clean}.${ext}`;
+  const path = `${prefix}/${Date.now()}-${clean}.${ext}`;
 
   const { error } = await supabaseAdmin.storage
     .from("package-images")

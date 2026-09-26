@@ -60,23 +60,31 @@ export async function GET(
       }
     }
 
-    // 3. Fetch active bookings for the month — summed as PAX, not row count,
-    //    so "remaining" matches the SQL check (SUM(pax) + p_pax > capacity).
-    //    Row counts made the picker disagree with the server after 007.
+    // 3. Fetch active bookings that OCCUPY any night of this month — a stay
+    //    covers nights tour_date .. end_date-1, not just its check-in date.
+    //    Summed as PAX, not row count, so "remaining" matches the SQL check
+    //    (SUM(pax) + p_pax > capacity). Row counts made the picker disagree
+    //    with the server after 007.
     const { data: bookingRows } = await supabaseAdmin
       .from("bookings")
-      .select("tour_date, pax")
+      .select("tour_date, end_date, pax")
       .eq("package_id", pkg.id)
-      .gte("tour_date", monthStart)
       .lte("tour_date", monthEnd)
+      .gt("end_date", monthStart)
       .in("status", ["PENDING_PAYMENT", "PENDING_CONFIRMATION", "CONFIRMED"]);
 
-    // Count booked PAX per date
+    // Count booked PAX per date — spread the pax across every night of the stay
     const bookedPax: Record<string, number> = {};
     if (bookingRows) {
       for (const row of bookingRows) {
-        bookedPax[row.tour_date] =
-          (bookedPax[row.tour_date] ?? 0) + (row.pax ?? 0);
+        // Date-only arithmetic in UTC: "YYYY-MM-DD" keys, no timezone drift.
+        const from = new Date(`${row.tour_date}T00:00:00Z`);
+        const to = new Date(`${row.end_date}T00:00:00Z`);
+        for (let d = from; d < to; d = new Date(d.getTime() + 86400000)) {
+          const key = d.toISOString().slice(0, 10);
+          if (key < monthStart || key > monthEnd) continue;
+          bookedPax[key] = (bookedPax[key] ?? 0) + (row.pax ?? 0);
+        }
       }
     }
 

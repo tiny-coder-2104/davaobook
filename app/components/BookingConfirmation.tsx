@@ -6,6 +6,7 @@ interface BookingConfirmationProps {
   packageName: string;
   tourDate: string;
   pax: number;
+  nights: number;
   pricePerPax: number;
   totalAmount: number;
   guestDetails: GuestDetails;
@@ -25,10 +26,18 @@ function formatDisplayDate(dateStr: string): string {
   });
 }
 
+/** Check-out = check-in + nights (UTC — no timezone drift). Same math as BookingPicker. */
+function addDaysStr(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function BookingConfirmation({
   packageName,
   tourDate,
   pax,
+  nights = 1,
   pricePerPax,
   totalAmount,
   guestDetails,
@@ -46,8 +55,15 @@ export default function BookingConfirmation({
       {/* Tour summary card */}
       <div className="rounded-touch border border-gray-200 bg-white p-4 space-y-3">
         <Row label="Package" value={packageName} />
-        <Row label="Date" value={formatDisplayDate(tourDate)} />
+        <Row
+          label={nights > 1 ? "Check-in" : "Date"}
+          value={formatDisplayDate(tourDate)}
+        />
+        {nights > 1 && (
+          <Row label="Check-out" value={formatDisplayDate(addDaysStr(tourDate, nights))} />
+        )}
         <Row label="Guests" value={`${pax} guest${pax === 1 ? "" : "s"}`} />
+        <Row label="Nights" value={`${nights} night${nights === 1 ? "" : "s"}`} />
         <Row label="Price" value={`₱${pricePerPax.toLocaleString("en-PH")} / night`} />
         <div className="border-t border-gray-100 pt-2">
           <Row label="Total" value={`₱${totalAmount.toLocaleString("en-PH")}`} bold />

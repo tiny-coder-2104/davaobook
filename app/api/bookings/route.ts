@@ -6,10 +6,14 @@ import { supabaseAdmin } from "@/lib/supabase-server";
  *
  * Calls the create_booking_transactional() PL/pgSQL function which:
  *  1. Validates package exists and is active
- *  2. Validates day-of-week, past date, blocks
+ *  2. Validates night count, day-of-week, past date, blocks (per night)
  *  3. Finds matching pricing tier
- *  4. Does SELECT FOR UPDATE capacity check (prevents overbooking)
- *  5. Inserts booking and returns the code
+ *  4. Does SELECT FOR UPDATE capacity check per night (prevents overbooking)
+ *  5. Inserts booking (one row per stay) and returns the code
+ *
+ * Body: ... existing fields ... + optional `nights` (integer >= 1, default 1).
+ * A stay occupies nights tour_date .. end_date-1 where end_date = tour_date +
+ * nights; total = tier_price (nightly) * nights.
  *
  * Returns: 201 on success, 400/404/409 on known errors.
  */
@@ -26,6 +30,9 @@ export async function POST(request: NextRequest) {
       guest_pickup_area,
       guest_notes,
     } = body;
+
+    // Optional nights — default 1 keeps the legacy single-day path identical.
+    const nights = body.nights ?? 1;
 
     // Validate required fields
     const missing: string[] = [];
@@ -58,7 +65,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (typeof nights !== "number" || !Number.isInteger(nights) || nights < 1 || nights > 365) {
+      return NextResponse.json(
+        { error: "nights must be an integer between 1 and 365" },
+        { status: 400 }
+      );
+    }
+
+    // Multi-night: check the package cap before hitting the RPC (the SQL fn
+    // re-checks — it's the trust boundary for this public path).
+    if (nights > 1) {
+      const { data: pkg, error: pkgErr } = await supabaseAdmin
+        .from("packages")
+        .select("id, max_nights")
+        .eq("id", package_id)
+        .eq("active", true)
+        .maybeSingle();
+
+      if (pkgErr) {
+        console.error("Package lookup error:", pkgErr);
+        return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
+      }
+      if (!pkg) {
+        return NextResponse.json(
+          { error: "Package not found or inactive" },
+          { status: 404 }
+        );
+      }
+      if (nights > pkg.max_nights) {
+        return NextResponse.json(
+          { error: `This package allows at most ${pkg.max_nights} night${pkg.max_nights === 1 ? "" : "s"} per booking` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Call the transactional database function
+    // (always pass p_nights explicitly: the 010 overload is ambiguous against
+    // the dead 8-arg one, and a PostgREST default is a fragile tie-breaker)
     const { data, error } = await supabaseAdmin.rpc(
       "create_booking_transactional",
       {
@@ -70,6 +114,7 @@ export async function POST(request: NextRequest) {
         p_guest_email: guest_email || null,
         p_guest_pickup_area: guest_pickup_area,
         p_guest_notes: guest_notes || null,
+        p_nights: nights,
       }
     );
 
@@ -84,13 +129,23 @@ export async function POST(request: NextRequest) {
       }
       if (msg.includes("CAPACITY_FULL")) {
         return NextResponse.json(
-          { error: "No capacity available for this date" },
+          {
+            error:
+              nights > 1
+                ? "No capacity available for one or more nights of this stay"
+                : "No capacity available for this date",
+          },
           { status: 409 }
         );
       }
       if (msg.includes("DATE_BLOCKED")) {
         return NextResponse.json(
-          { error: "Date is blocked by the operator" },
+          {
+            error:
+              nights > 1
+                ? "One or more nights of this stay are blocked by the operator"
+                : "Date is blocked by the operator",
+          },
           { status: 409 }
         );
       }
@@ -102,7 +157,18 @@ export async function POST(request: NextRequest) {
       }
       if (msg.includes("PACKAGE_UNAVAILABLE_DAY")) {
         return NextResponse.json(
-          { error: "Package is not available on this day of the week" },
+          {
+            error:
+              nights > 1
+                ? "Package is not available on one or more nights of this stay"
+                : "Package is not available on this day of the week",
+          },
+          { status: 400 }
+        );
+      }
+      if (msg.includes("MAX_NIGHTS_EXCEEDED")) {
+        return NextResponse.json(
+          { error: "Requested nights exceed this package's maximum" },
           { status: 400 }
         );
       }
@@ -128,6 +194,8 @@ export async function POST(request: NextRequest) {
         status: booking.status,
         total_amount: booking.total_amount,
         tour_date: booking.tour_date,
+        end_date: booking.end_date,
+        nights: booking.nights,
         status_url: `/api/bookings/${booking.code}`,
       },
       { status: 201 }

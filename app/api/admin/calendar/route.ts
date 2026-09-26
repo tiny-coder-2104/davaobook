@@ -42,11 +42,12 @@ export async function GET(request: NextRequest) {
     packages = [pkg];
     packageIds = [pkg.id];
   } else {
+    // No active filter: a deactivated package keeps existing bookings that must
+    // stay visible here (they vanish from the "All packages" view otherwise).
     const { data: pkgs } = await supabaseAdmin
       .from("packages")
       .select("id, name, capacity_per_day")
-      .eq("operator_id", operatorId)
-      .eq("active", true);
+      .eq("operator_id", operatorId);
 
     packages = pkgs ?? [];
     packageIds = packages.map((p) => p.id);
@@ -56,13 +57,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ days: {}, packages: [] });
   }
 
-  // 2. Fetch bookings in date range for active statuses
+  // 2. Fetch bookings that OCCUPY any night of the month — a stay covers
+  //    nights tour_date .. end_date-1, so an in-house stay shows up on every
+  //    night it covers, not just its check-in date.
   const { data: bookings } = await supabaseAdmin
     .from("bookings")
-    .select("id, package_id, tour_date, pax, status, guest_name, mobile, code")
+    .select(
+      "id, package_id, tour_date, end_date, pax, status, guest_name, mobile, code"
+    )
     .in("package_id", packageIds)
-    .gte("tour_date", startDate)
     .lt("tour_date", endDate)
+    .gt("end_date", startDate)
     .in("status", [
       "PENDING_PAYMENT",
       "PENDING_CONFIRMATION",
@@ -94,10 +99,15 @@ export async function GET(request: NextRequest) {
     daysMap[dateStr] = { bookings: [], blocks: [], capacity: totalCapacity };
   }
 
-  // Fill in bookings
+  // Fill in bookings — one stay lands on every night it covers
   for (const b of bookings ?? []) {
-    const day = daysMap[b.tour_date];
-    if (day) day.bookings.push(b);
+    // Date-only arithmetic in UTC: "YYYY-MM-DD" keys, no timezone drift.
+    const from = new Date(`${b.tour_date}T00:00:00Z`);
+    const to = new Date(`${b.end_date}T00:00:00Z`);
+    for (let d = from; d < to; d = new Date(d.getTime() + 86400000)) {
+      const day = daysMap[d.toISOString().slice(0, 10)];
+      if (day) day.bookings.push(b);
+    }
   }
 
   // Fill in blocks (NULL package_id = blocks all packages)

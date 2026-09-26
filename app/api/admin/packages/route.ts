@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { deriveCapacityPerDay } from "@/lib/pricing";
 
 /**
  * GET /api/admin/packages — List packages for the authenticated operator.
@@ -26,7 +27,10 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/admin/packages — Create a new package.
  * Body: { name, description?, photo_url?, tiers, days_of_week,
- *         capacity_per_day, downpayment_pct, cutoff_hours, dp_refundable }
+ *         downpayment_pct, cutoff_hours, dp_refundable }
+ *
+ * capacity_per_day is IGNORED if the client sends it: it is derived from the
+ * widest tier (see deriveCapacityPerDay) so the two can't contradict.
  */
 export async function POST(request: NextRequest) {
   const operatorId = request.headers.get("x-operator-id");
@@ -42,7 +46,6 @@ export async function POST(request: NextRequest) {
       photo_url,
       tiers,
       days_of_week,
-      capacity_per_day,
       downpayment_pct,
       cutoff_hours,
       dp_refundable,
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
         photo_url: photo_url || null,
         tiers,
         days_of_week: days_of_week ?? [0, 1, 2, 3, 4, 5, 6],
-        capacity_per_day: capacity_per_day ?? 20,
+        capacity_per_day: deriveCapacityPerDay(tiers),
         downpayment_pct: downpayment_pct ?? 0,
         cutoff_hours: cutoff_hours ?? 24,
         dp_refundable: dp_refundable ?? false,

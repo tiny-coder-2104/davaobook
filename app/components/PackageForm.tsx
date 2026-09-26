@@ -14,7 +14,6 @@ export interface PackageFormData {
   photo_url: string | null;
   tiers: PackageTier[];
   days_of_week: number[];
-  capacity_per_day: number;
   downpayment_pct: number;
   cutoff_hours: number;
   dp_refundable: boolean;
@@ -39,7 +38,6 @@ const DEFAULT_DATA: PackageFormData = {
   photo_url: null,
   tiers: [{ min_pax: 1, max_pax: 10, price_per_pax: 0 }],
   days_of_week: [0, 1, 2, 3, 4, 5, 6],
-  capacity_per_day: 20,
   downpayment_pct: 0,
   cutoff_hours: 24,
   dp_refundable: false,
@@ -111,7 +109,6 @@ export default function PackageForm({
     if (data.tiers.some((t) => t.price_per_pax <= 0))
       errs.tiers = "All tiers must have a price";
     if (data.days_of_week.length === 0) errs.days_of_week = "Select at least one day";
-    if (data.capacity_per_day < 1) errs.capacity_per_day = "Capacity must be at least 1";
     if (data.downpayment_pct < 0 || data.downpayment_pct > 100)
       errs.downpayment_pct = "Must be 0-100";
     setErrors(errs);
@@ -186,6 +183,9 @@ export default function PackageForm({
           tiers={data.tiers}
           onChange={(tiers) => update("tiers", tiers)}
         />
+        <p className="mt-2 text-xs text-ink-muted">
+          Daily capacity is the widest tier&apos;s Max Guests.
+        </p>
         {errors.tiers && <p className="mt-1 text-xs text-red-500">{errors.tiers}</p>}
       </Section>
 
@@ -198,27 +198,6 @@ export default function PackageForm({
         {errors.days_of_week && (
           <p className="mt-1 text-xs text-red-500">{errors.days_of_week}</p>
         )}
-      </Section>
-
-      {/* Capacity */}
-      <Section title="Capacity">
-        <div>
-          <label htmlFor="pkg-capacity" className="block text-sm font-medium text-ink mb-1">
-            Max guests per day
-          </label>
-          <input
-            id="pkg-capacity"
-            type="number"
-            min={1}
-            value={data.capacity_per_day}
-            onChange={(e) => update("capacity_per_day", parseInt(e.target.value) || 1)}
-            className="w-full min-h-[48px] px-3 rounded-touch border-2 border-gray-200 bg-white text-ink text-base
-              focus:border-brand focus:outline-none transition-colors"
-          />
-          {errors.capacity_per_day && (
-            <p className="mt-1 text-xs text-red-500">{errors.capacity_per_day}</p>
-          )}
-        </div>
       </Section>
 
       {/* Downpayment */}

@@ -28,6 +28,8 @@ export interface Package {
   tiers: PackageTier[];
   days_of_week: number[];
   capacity_per_day: number;
+  /** Max consecutive nights a single booking may occupy (1 = single-day only). */
+  max_nights: number;
   downpayment_pct: number;
   cutoff_hours: number;
   dp_refundable: boolean;

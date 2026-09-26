@@ -52,7 +52,7 @@ function priceRange(tiers: Package["tiers"]): string {
 export default function AdminPackages() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
 
   const fetchPackages = useCallback(async () => {
     setLoading(true);
@@ -71,18 +71,34 @@ export default function AdminPackages() {
     fetchPackages();
   }, [fetchPackages]);
 
-  async function handleDeactivate(id: string) {
-    if (!window.confirm("Deactivate this package? It will no longer appear for guests.")) return;
-    setDeleting(id);
+  async function setActive(id: string, active: boolean) {
+    if (
+      !window.confirm(
+        active
+          ? "Reactivate this package? It will appear for guests again."
+          : "Deactivate this package? It will no longer appear for guests."
+      )
+    )
+      return;
+    setPending(id);
     try {
-      const res = await fetch(`/api/admin/packages/${id}`, { method: "DELETE" });
+      // DELETE is the soft-delete path; PUT is the only way back.
+      const res = await fetch(`/api/admin/packages/${id}`, {
+        method: active ? "PUT" : "DELETE",
+        ...(active
+          ? {
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ active: true }),
+            }
+          : {}),
+      });
       if (res.ok) {
         setPackages((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, active: false } : p))
+          prev.map((p) => (p.id === id ? { ...p, active } : p))
         );
       }
     } finally {
-      setDeleting(null);
+      setPending(null);
     }
   }
 
@@ -193,16 +209,27 @@ export default function AdminPackages() {
                   </svg>
                   Edit
                 </Link>
-                {pkg.active && (
+                {pkg.active ? (
                   <button
                     type="button"
-                    onClick={() => handleDeactivate(pkg.id)}
-                    disabled={deleting === pkg.id}
+                    onClick={() => setActive(pkg.id, false)}
+                    disabled={pending === pkg.id}
                     className="min-h-[44px] px-4 rounded-touch border border-red-200 text-sm font-medium
                       text-status-cancelled hover:bg-red-50 active:scale-[0.98] transition-all
                       disabled:opacity-50"
                   >
-                    {deleting === pkg.id ? "..." : "Deactivate"}
+                    {pending === pkg.id ? "..." : "Deactivate"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setActive(pkg.id, true)}
+                    disabled={pending === pkg.id}
+                    className="min-h-[44px] px-4 rounded-touch border border-green-200 text-sm font-medium
+                      text-status-confirmed hover:bg-green-50 active:scale-[0.98] transition-all
+                      disabled:opacity-50"
+                  >
+                    {pending === pkg.id ? "..." : "Reactivate"}
                   </button>
                 )}
               </div>

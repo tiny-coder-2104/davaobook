@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 interface SuccessScreenProps {
   bookingCode: string;
   tourDate: string;
+  nights: number;
   packageName: string;
   totalAmount: number;
 }
@@ -33,6 +34,7 @@ function getSlotDeadline(): string {
 export default function SuccessScreen({
   bookingCode,
   tourDate,
+  nights = 1,
   packageName,
   totalAmount,
 }: SuccessScreenProps) {
@@ -66,7 +68,7 @@ export default function SuccessScreen({
     try {
       await navigator.share({
         title: `Booking ${bookingCode}`,
-        text: `My ${packageName} booking request is in! Code: ${bookingCode}. Stay date: ${formatDisplayDate(tourDate)}. Total: ₱${totalAmount.toLocaleString("en-PH")}`,
+        text: `My ${packageName} booking request is in! Code: ${bookingCode}. Stay date: ${formatDisplayDate(tourDate)}, ${nights} night${nights === 1 ? "" : "s"}. Total: ₱${totalAmount.toLocaleString("en-PH")}`,
       });
     } catch {
       // ponytail: user cancelled share or API unavailable
@@ -152,6 +154,12 @@ export default function SuccessScreen({
           <span className="text-ink-muted">Date</span>
           <span className="font-medium text-ink">
             {formatDisplayDate(tourDate)}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-ink-muted">Nights</span>
+          <span className="font-medium text-ink">
+            {nights} night{nights === 1 ? "" : "s"}
           </span>
         </div>
         <div className="flex justify-between text-sm">

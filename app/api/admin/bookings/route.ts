@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   let query = supabaseAdmin
     .from("bookings")
     .select(
-      "id, code, tour_date, pax, total_amount, status, guest_name, mobile, email, pickup_area, notes, gcash_ref, screenshot_url, created_at, packages!inner(name, slug, operator_id)",
+      "id, code, tour_date, end_date, pax, total_amount, status, guest_name, mobile, email, pickup_area, notes, gcash_ref, screenshot_url, created_at, packages!inner(name, slug, operator_id)",
       { count: "exact" }
     )
     .eq("packages.operator_id", operatorId)
@@ -36,7 +36,10 @@ export async function GET(request: NextRequest) {
       `guest_name.ilike.%${search}%,code.ilike.%${search}%`
     );
   }
-  if (start) query = query.gte("tour_date", start);
+  // Range filter = RANGE OVERLAP: include a stay if it occupies any night in
+  // [start, end] (tour_date <= end AND end_date > start), not just if it
+  // checks in inside the range.
+  if (start) query = query.gt("end_date", start);
   if (end) query = query.lte("tour_date", end);
 
   query = query.range(offset, offset + limit - 1);

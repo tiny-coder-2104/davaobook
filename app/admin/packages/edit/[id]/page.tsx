@@ -105,7 +105,6 @@ export default function EditPackagePage() {
           photo_url: pkg.photo_url,
           tiers: pkg.tiers,
           days_of_week: pkg.days_of_week,
-          capacity_per_day: pkg.capacity_per_day,
           downpayment_pct: pkg.downpayment_pct,
           cutoff_hours: pkg.cutoff_hours,
           dp_refundable: pkg.dp_refundable,

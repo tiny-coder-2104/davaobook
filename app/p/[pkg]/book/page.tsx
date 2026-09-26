@@ -37,6 +37,7 @@ export default async function BookPackage({
         pkgSlug={pkgData.slug}
         pkgName={pkgData.name}
         tiers={pkgData.tiers}
+        maxNights={pkgData.max_nights}
       />
     </main>
   );

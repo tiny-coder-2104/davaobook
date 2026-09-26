@@ -5,6 +5,8 @@ interface PaxStepperProps {
   min?: number;
   max: number;
   onChange: (value: number) => void;
+  /** What is being counted — "guests" (default) or "nights". Drives labels. */
+  noun?: string;
 }
 
 export default function PaxStepper({
@@ -12,6 +14,7 @@ export default function PaxStepper({
   min = 1,
   max,
   onChange,
+  noun = "guests",
 }: PaxStepperProps) {
   const decrement = () => {
     if (value > min) onChange(value - 1);
@@ -43,7 +46,7 @@ export default function PaxStepper({
         className="min-w-[48px] min-h-[48px] rounded-touch bg-gray-100 text-2xl font-bold flex items-center justify-center
                    hover:bg-gray-200 active:scale-95 transition-all
                    disabled:opacity-30 disabled:cursor-not-allowed"
-        aria-label="Decrease guests"
+        aria-label={`Decrease ${noun}`}
       >
         −
       </button>
@@ -59,7 +62,7 @@ export default function PaxStepper({
                    border-2 border-gray-200 rounded-touch bg-white
                    focus:border-brand focus:outline-none
                    [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-        aria-label="Number of guests"
+        aria-label={`Number of ${noun}`}
       />
 
       <button
@@ -68,7 +71,7 @@ export default function PaxStepper({
         className="min-w-[48px] min-h-[48px] rounded-touch bg-gray-100 text-2xl font-bold flex items-center justify-center
                    hover:bg-gray-200 active:scale-95 transition-all
                    disabled:opacity-30 disabled:cursor-not-allowed"
-        aria-label="Increase guests"
+        aria-label={`Increase ${noun}`}
       >
         +
       </button>

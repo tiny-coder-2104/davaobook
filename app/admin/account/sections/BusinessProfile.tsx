@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/lib/supabase-browser";
 
 /**
  * BusinessProfile — editable operator account form (client component).
@@ -9,13 +8,13 @@ import { createBrowserClient } from "@/lib/supabase-browser";
  * Loads operator data from GET /api/admin/account on mount, lets the operator
  * edit business details, and persists changes via PUT /api/admin/account.
  *
- * logo_url and gcash_qr_url each expose a file upload to the `operator-assets`
- * Supabase Storage bucket. If the bucket is missing or the upload fails, the
- * manual URL text field remains the source of truth (graceful fallback), so
- * the field is always editable.
+ * logo_url and gcash_qr_url each expose a file upload that POSTs to
+ * /api/admin/upload (service-role key server-side, magic-byte sniffed, 2MB
+ * cap) — a client-side Storage upload has no INSERT policy and always fails
+ * (ticket 0025). If the upload fails, the manual URL text field remains the
+ * source of truth (graceful fallback), so the field is always editable.
  */
 
-const BUCKET = "package-images"; // ponytail: reuses existing public bucket; create operator-assets later if needed
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 interface AccountData {
@@ -184,7 +183,8 @@ export default function BusinessProfile() {
     }
   };
 
-  // Upload a logo/QR image to Storage; on failure keep the manual URL field.
+  // Upload a logo/QR image through the server-side upload route; on failure
+  // keep the manual URL field.
   const uploadFile = async (
     file: File,
     field: "logo_url" | "gcash_qr_url"
@@ -192,21 +192,23 @@ export default function BusinessProfile() {
     const errKey = field === "logo_url" ? "logo" : "qr";
     setUploadErrors((u) => ({ ...u, [errKey]: undefined }));
     try {
-      const supabase = createBrowserClient();
-      const ext = file.name.split(".").pop() || "png";
-      const path = `${field}/${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 8)}.${ext}`;
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
 
-      const { error } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { upsert: true });
-      if (error) throw new Error(error.message);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, base64, kind: "brand" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
+      if (!data?.url) throw new Error("Could not resolve public URL");
 
-      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      if (!data?.publicUrl) throw new Error("Could not resolve public URL");
-
-      setField(field, data.publicUrl);
+      setField(field, data.url);
     } catch (e) {
       // Graceful fallback: leave the text URL field editable and surface why.
       setUploadErrors((u) => ({
