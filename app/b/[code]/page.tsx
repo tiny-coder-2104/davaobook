@@ -47,12 +47,27 @@ function formatDisplayDate(dateStr: string): string {
   });
 }
 
+/** Legacy rows may have a null end_date; a bad value must not print "Invalid Date". */
+function formatStayEnd(endDate: string | null): string | null {
+  if (!endDate) return null;
+  const d = new Date(endDate + "T00:00:00");
+  return Number.isNaN(d.getTime()) ? null : formatDisplayDate(endDate);
+}
+
+/** Nights row text. Falls back to the stored value; "1 night" is a normal stay, not an error. */
+function formatNights(nights: number | null): string | null {
+  if (nights == null || nights < 1) return null;
+  return `${nights} night${nights === 1 ? "" : "s"}`;
+}
+
 /* ── Page ── */
 
 export default async function BookingStatusPage({ params }: PageProps) {
   const { data, error } = await supabaseAdmin
     .from("bookings")
-    .select("code, status, tour_date, pax, total_amount, cancelled_reason, packages(name)")
+    .select(
+      "code, status, tour_date, end_date, nights, pax, total_amount, cancelled_reason, packages(name)"
+    )
     .eq("code", params.code.toUpperCase())
     .single();
 
@@ -67,6 +82,9 @@ export default async function BookingStatusPage({ params }: PageProps) {
   const style = STATUS_STYLES[status] ?? "bg-gray-100 text-gray-500";
   const weatherCancelled =
     status === "CANCELLED" && data.cancelled_reason === "WEATHER";
+
+  const checkOut = formatStayEnd(data.end_date as string | null);
+  const nightsLabel = formatNights(data.nights as number | null);
 
   return (
     <main className="px-4 py-8 min-h-screen bg-gray-50">
@@ -100,11 +118,29 @@ export default async function BookingStatusPage({ params }: PageProps) {
               </span>
             </div>
             <div className="flex justify-between gap-4">
-              <span className="text-ink-muted">Stay date</span>
+              <span className="text-ink-muted">Check-in</span>
               <span className="font-medium text-ink text-right">
                 {formatDisplayDate(data.tour_date)}
               </span>
             </div>
+            {/* Legacy pre-multi-night rows have no end_date — omit the row
+                entirely rather than render "Invalid Date". */}
+            {checkOut && (
+              <div className="flex justify-between gap-4">
+                <span className="text-ink-muted">Check-out</span>
+                <span className="font-medium text-ink text-right">
+                  {checkOut}
+                </span>
+              </div>
+            )}
+            {nightsLabel && (
+              <div className="flex justify-between gap-4">
+                <span className="text-ink-muted">Nights</span>
+                <span className="font-medium text-ink text-right">
+                  {nightsLabel}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between gap-4">
               <span className="text-ink-muted">Guests</span>
               <span className="font-medium text-ink">

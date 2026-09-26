@@ -3,8 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 
 /**
  * GET /api/track?email= — Public booking lookup by email.
- * Returns a minimal array (code/status/tour_date/end_date/package_name/pax/
- * total_amount). No phone, email, or other PII in the response.
+ * Returns a minimal array (code/status/tour_date/end_date/nights/
+ * package_name/pax/total_amount). No phone, email, or other PII in the
+ * response.
  */
 export async function GET(request: NextRequest) {
   const email = request.nextUrl.searchParams.get("email")?.trim();
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from("bookings")
-    .select("code, status, tour_date, end_date, pax, total_amount, packages(name)")
+    .select("code, status, tour_date, end_date, nights, pax, total_amount, packages(name)")
     .ilike("email", email);
 
   if (error) {
@@ -37,6 +38,7 @@ export async function GET(request: NextRequest) {
         status: b.status,
         tour_date: b.tour_date,
         end_date: b.end_date,
+        nights: b.nights,
         package_name: (pkg as { name?: string } | null)?.name ?? null,
         pax: b.pax,
         total_amount: b.total_amount,

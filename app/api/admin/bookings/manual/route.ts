@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
+/** RPC returns end_date as a timestamp; the DATE column and every read path
+ *  return YYYY-MM-DD. Normalise so the 201 body matches. See the sibling
+ *  route at app/api/bookings/route.ts. */
+function toDateOnly(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const date = value.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+}
+
 /**
  * POST /api/admin/bookings/manual — Create a manual (walk-in) booking.
  *
@@ -199,7 +208,7 @@ export async function POST(request: NextRequest) {
         status: "PENDING_CONFIRMATION",
         total_amount: booking.total_amount,
         tour_date: booking.tour_date,
-        end_date: booking.end_date,
+        end_date: toDateOnly(booking.end_date),
         nights: booking.nights,
       },
       { status: 201 }

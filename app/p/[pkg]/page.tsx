@@ -5,7 +5,14 @@ import { supabase } from "../../../lib/supabase";
 import type { Operator, Package, PackageTier } from "../../../lib/types";
 import VerifiedBadge from "../../components/VerifiedBadge";
 
+// `active` is a mutable flag: deactivating a package must 404 this page on the
+// next request, not up to `revalidate` seconds later. revalidate alone was not
+// enough (QA 0043): on Next 14.2 the supabase fetch kept force-cache semantics
+// and the Data Cache entry persisted across deployments, so a deactivated
+// package kept serving 200 with a full page even on a cache-busted URL.
+// fetchCache = force-no-store pins revalidate = 0 for the fetch itself.
 export const revalidate = 60;
+export const fetchCache = "force-no-store";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 

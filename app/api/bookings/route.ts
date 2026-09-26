@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
 /**
+ * The create_booking_transactional() RPC computes end_date as
+ * p_tour_date + INTERVAL, so it comes back as a timestamp
+ * ("2026-10-16T00:00:00") while the bookings.end_date DATE column — and every
+ * read path (GET /api/track, /b/[code]) — returns "2026-10-16". Trim to the date
+ * part so the write and read shapes match. Passes through null/empty and
+ * already-clean values unchanged.
+ */
+function toDateOnly(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const date = value.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+}
+
+/**
  * POST /api/bookings — Create a new booking with transactional capacity check.
  *
  * Calls the create_booking_transactional() PL/pgSQL function which:
@@ -194,7 +208,7 @@ export async function POST(request: NextRequest) {
         status: booking.status,
         total_amount: booking.total_amount,
         tour_date: booking.tour_date,
-        end_date: booking.end_date,
+        end_date: toDateOnly(booking.end_date),
         nights: booking.nights,
         status_url: `/api/bookings/${booking.code}`,
       },

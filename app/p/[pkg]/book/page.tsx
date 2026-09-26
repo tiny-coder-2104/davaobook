@@ -3,7 +3,10 @@ import { supabase } from "@/lib/supabase";
 import type { Package } from "@/lib/types";
 import BookingFormFlow from "@/app/components/BookingFormFlow";
 
+// Same staleness class as /p/[pkg] and /b/[code] (QA 0043): the packages.active
+// filter must take effect on the next request, so pin the fetch to no-store.
 export const revalidate = 60;
+export const fetchCache = "force-no-store";
 
 export default async function BookPackage({
   params,

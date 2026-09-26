@@ -5,7 +5,10 @@ import type { Operator, Package } from "../../lib/types";
 import TrustStrip from "../components/TrustStrip";
 import PackageCard from "../components/PackageCard";
 
+// Landing lists packages by the mutable packages.active flag — same staleness
+// class as /p/[pkg] (QA 0043). Reads the DB on every request.
 export const revalidate = 60;
+export const fetchCache = "force-no-store";
 
 export default async function OperatorLanding({
   params,

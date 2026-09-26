@@ -98,10 +98,12 @@ export async function POST(request: NextRequest) {
   }
 
   // Sanitize: strip any path, keep alphanumeric + dash, timestamp prefix.
+  // The extension comes from the sniffed mime, not the caller-supplied name —
+  // append it after the strip so "logo.png" stays "logo.png" and not "logopng".
   const raw = (filename ?? "photo").split(/[\\/]/).pop() ?? "photo";
-  const clean = raw.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40) || "photo";
+  const base = raw.replace(/\.[^.]*$/, "").replace(/[^a-zA-Z0-9-]/g, "").slice(0, 40);
   const ext = mime === "image/jpeg" ? "jpg" : mime.split("/")[1];
-  const path = `${prefix}/${Date.now()}-${clean}.${ext}`;
+  const path = `${prefix}/${Date.now()}-${base || "photo"}.${ext}`;
 
   const { error } = await supabaseAdmin.storage
     .from("package-images")

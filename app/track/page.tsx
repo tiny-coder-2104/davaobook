@@ -8,6 +8,8 @@ interface TrackedBooking {
   code: string;
   status: string;
   tour_date: string;
+  /** Multi-night stay length. null on pre-010 legacy rows. */
+  nights: number | null;
   package_name: string | null;
   pax: number;
   total_amount: number;
@@ -146,8 +148,10 @@ export default function TrackPage() {
                       {b.package_name ?? "Room"}
                     </p>
                     <p className="text-xs text-ink-muted mt-0.5">
-                      {formatDisplayDate(b.tour_date)} · {b.pax} guest
-                      {b.pax === 1 ? "" : "s"} · ₱
+                      {formatDisplayDate(b.tour_date)}
+                      {/* Only multi-night — "1 night" is noise on a one-day stay. */}
+                      {b.nights && b.nights > 1 ? ` · ${b.nights} nights` : ""} ·{" "}
+                      {b.pax} guest{b.pax === 1 ? "" : "s"} · ₱
                       {b.total_amount.toLocaleString("en-PH")}
                     </p>
                   </Link>
