@@ -27,8 +27,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 // Booking code shape: {PKG-SLUG}-{MMDD}-{GUEST-NAME}[-N], e.g. STAND-0826-JUAN.
-// Source of truth: supabase/migrations/002_create_booking_fn.sql (calls
-// generate_booking_code) + 003_fix_booking_code_empty_name.sql.
+// Source of truth: supabase/migrations/002_create_booking_fn.sql (creates/
+// calls generate_booking_code) + 014_fix_booking_code_generator.sql (current
+// definition of the code format; replaced 003's body).
 //   slug  = first 5 alphanumerics of package slug (non-alnum stripped first)
 //           → [A-Z0-9]{1,5}
 //   name  = first 4 alphanumeric chars, or the literal GUEST fallback (5 chars)

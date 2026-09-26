@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
+// Status must reflect the CURRENT row on every request. Without these the
+// route touches no dynamic API, so Next treats the GET as cacheable and
+// freezes the first response — observed in production serving a booking's
+// pre-update status indefinitely (x-vercel-cache: MISS, age: 0, so the
+// function itself returned the stale fetch result, not the CDN).
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 /**
  * GET /api/bookings/:code — Public booking status lookup.
  * No auth required — the booking code is the secret.
