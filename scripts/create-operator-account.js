@@ -43,7 +43,7 @@ const body = JSON.stringify({
   email,
   password: tempPassword,
   email_confirm: true,
-  user_metadata: { must_change_password: true },
+  user_metadata: { must_change_password: true, operator_id: operatorId },
   app_metadata: { operator_id: operatorId },
 });
 

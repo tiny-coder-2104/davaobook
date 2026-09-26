@@ -17,7 +17,17 @@
 -- signature — that is what left two overloads and caused the PGRST203 outage in
 -- 010) and bail out early when the incoming user already carries a valid
 -- operator_id. The trigger itself, its timing and its grants are untouched.
--- Idempotent: re-running replaces the function and re-runs a no-op cleanup.
+-- Idempotent: re-running replaces the function.
+--
+-- REMOVED: a trailing `DELETE FROM public.operators ...` cleanup, and the
+-- comment block justifying it. It was never applied to production, so nothing
+-- drifts by removing it here. It is removed on the grounds that "owns no
+-- packages/bookings/blocks" is NOT the orphan signature: a brand-new
+-- legitimate operator owns nothing either. Against live operators it matched
+-- 3 of 4 rows, two of which had real auth users pointed at them — it would
+-- have destroyed live accounts. Fix 012 corrects the guard above; the one
+-- genuine orphan (0737b84e) is removed by a targeted id-filtered delete, never
+-- by a broad sweep.
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
@@ -62,28 +72,3 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ---------------------------------------------------------------------------
--- Cleanup of the pre-fix debris, so a fresh apply converges on a clean state.
---
--- Remove operator rows that no auth user points at AND that own nothing.
--- Scoped deliberately: requires the row to own no packages, no bookings and
--- no blocks before it can be removed.
---
--- auth.users is NOT checked here. This migration is authored to run under a
--- role we cannot prove can SELECT auth.users (005 only proves the *function
--- owner* can UPDATE it, via SECURITY DEFINER), and a migration that fails on
--- a permission error is worse than one that under-reaches. So the auth leg is
--- deliberately absent rather than faked: an operator who signed up normally
--- owns a package, so "owns nothing at all" is already the empty-duplicate
--- signature. Residual risk, stated plainly: a brand-new real operator with no
--- package/bookings/block yet would be swept too — they lose nothing (all
--- three child tables are empty) and, with the guard above, nothing re-creates
--- the row for them, so they would need a re-run of 005's INSERT path by hand.
--- bookings.operator_id has no ON DELETE CASCADE, so the NOT EXISTS on
--- bookings is also a hard FK backstop, not just intent.
--- ---------------------------------------------------------------------------
-DELETE FROM public.operators o
-WHERE NOT EXISTS (SELECT 1 FROM public.packages p WHERE p.operator_id = o.id)
-  AND NOT EXISTS (SELECT 1 FROM public.bookings  b WHERE b.operator_id = o.id)
-  AND NOT EXISTS (SELECT 1 FROM public.blocks    k WHERE k.operator_id = o.id);
