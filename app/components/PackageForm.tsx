@@ -106,8 +106,7 @@ export default function PackageForm({
     const errs: Record<string, string> = {};
     if (!data.name.trim()) errs.name = "Name is required";
     if (data.tiers.length === 0) errs.tiers = "Add at least one pricing tier";
-    if (data.tiers.some((t) => t.price_per_pax <= 0))
-      errs.tiers = "All tiers must have a price";
+    // price 0 (or blank) = rates on request — allowed, never rejected.
     if (data.days_of_week.length === 0) errs.days_of_week = "Select at least one day";
     if (data.downpayment_pct < 0 || data.downpayment_pct > 100)
       errs.downpayment_pct = "Must be 0-100";

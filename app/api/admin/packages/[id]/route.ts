@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { deriveCapacityPerDay } from "@/lib/pricing";
+import { deriveCapacityPerDay, normalizeTiers } from "@/lib/pricing";
 
 /**
  * PUT /api/admin/packages/[id] — Update a package.
@@ -52,9 +52,10 @@ export async function PUT(
     if (description !== undefined) updates.description = description;
     if (photo_url !== undefined) updates.photo_url = photo_url || null;
     if (tiers !== undefined) {
-      updates.tiers = tiers;
+      const safeTiers = normalizeTiers(tiers);
+      updates.tiers = safeTiers;
       updates.capacity_per_day = deriveCapacityPerDay(
-        tiers,
+        safeTiers,
         existing.capacity_per_day
       );
     }

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { hasRate, TOTAL_ON_REQUEST } from "@/lib/pricing";
 
 // Status pages must reflect the CURRENT row on every request. force-dynamic
 // alone did NOT suffice on Next 14.2: the supabase fetch kept force-cache
@@ -149,8 +150,16 @@ export default async function BookingStatusPage({ params }: PageProps) {
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-ink-muted">Total</span>
-              <span className="font-heading font-bold text-brand">
-                ₱{data.total_amount.toLocaleString("en-PH")}
+              <span
+                className={`font-heading font-bold ${
+                  hasRate(data.total_amount as number)
+                    ? "text-brand"
+                    : "text-ink-muted"
+                }`}
+              >
+                {hasRate(data.total_amount as number)
+                  ? `₱${(data.total_amount as number).toLocaleString("en-PH")}`
+                  : TOTAL_ON_REQUEST}
               </span>
             </div>
           </div>

@@ -37,7 +37,7 @@ export default function TierEditor({ tiers, onChange }: TierEditorProps) {
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 text-xs font-medium text-ink-muted px-1">
         <span>Min Guests</span>
         <span>Max Guests</span>
-        <span>Price/Night (₱)</span>
+        <span>Price/Night (₱ · 0 = on request)</span>
         <span className="w-8" />
       </div>
 
@@ -62,7 +62,7 @@ export default function TierEditor({ tiers, onChange }: TierEditorProps) {
           <input
             type="number"
             min={0}
-            value={tier.price_per_pax}
+            value={tier.price_per_pax ?? 0}
             onChange={(e) => updateTier(i, "price_per_pax", parseInt(e.target.value) || 0)}
             className="w-full min-w-0 min-h-[48px] px-2 rounded-touch border border-gray-300 text-sm
               focus:outline-none focus:ring-1 focus:ring-brand text-center"

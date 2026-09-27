@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { type BookingRow, STATUS_STYLES, STATUS_LABELS } from "./BookingCard";
 import { type BookingStatus } from "@/lib/transitions";
+import { hasRate, TOTAL_ON_REQUEST } from "@/lib/pricing";
 
 interface BookingDetailSheetProps {
   booking: BookingRow;
@@ -107,7 +108,11 @@ export default function BookingDetailSheet({
             <InfoRow label="Guests" value={String(booking.pax)} />
             <InfoRow
               label="Total"
-              value={`₱${booking.total_amount.toLocaleString("en-PH")}`}
+              value={
+                hasRate(booking.total_amount)
+                  ? `₱${booking.total_amount.toLocaleString("en-PH")}`
+                  : TOTAL_ON_REQUEST
+              }
             />
             <InfoRow label="Code" value={booking.code} />
           </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { hasRate } from "@/lib/pricing";
 
 interface TrackedBooking {
   code: string;
@@ -153,8 +154,9 @@ export default function TrackPage() {
                       {formatDisplayDate(b.tour_date)}
                       {/* Only multi-night — "1 night" is noise on a one-day stay. */}
                       {b.nights && b.nights > 1 ? ` · ${b.nights} nights` : ""} ·{" "}
-                      {b.pax} guest{b.pax === 1 ? "" : "s"} · ₱
-                      {b.total_amount.toLocaleString("en-PH")}
+                      {b.pax} guest{b.pax === 1 ? "" : "s"}
+                      {hasRate(b.total_amount) &&
+                        ` · ₱${b.total_amount.toLocaleString("en-PH")}`}
                     </p>
                   </Link>
                 </li>

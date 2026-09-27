@@ -1,20 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Package, PackageTier } from "../../lib/types";
+import type { Package } from "../../lib/types";
+import { lowestRate, RATE_ON_REQUEST } from "../../lib/pricing";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function lowestPrice(tiers: PackageTier[]): number {
-  if (tiers.length === 0) return 0;
-  return Math.min(...tiers.map((t) => t.price_per_pax));
-}
-
-function formatPrice(amount: number): string {
-  return `₱${amount.toLocaleString("en-PH")}`;
-}
-
 export default function PackageCard({ pkg }: { pkg: Package }) {
-  const from = lowestPrice(pkg.tiers);
+  const from = lowestRate(pkg.tiers);
 
   return (
     <Link
@@ -43,9 +35,19 @@ export default function PackageCard({ pkg }: { pkg: Package }) {
         </h2>
 
         <p className="mt-2 text-sm">
-          <span className="text-ink-muted">From </span>
-          <span className="font-bold text-base text-ink">{formatPrice(from)}</span>
-          <span className="text-ink-muted">/night</span>
+          {from !== null ? (
+            <>
+              <span className="text-ink-muted">From </span>
+              <span className="font-bold text-base text-ink">
+                ₱{from.toLocaleString("en-PH")}
+              </span>
+              <span className="text-ink-muted">/night</span>
+            </>
+          ) : (
+            <span className="font-semibold text-base text-ink">
+              {RATE_ON_REQUEST}
+            </span>
+          )}
         </p>
 
         {pkg.days_of_week.length > 0 && (

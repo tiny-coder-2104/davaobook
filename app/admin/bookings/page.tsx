@@ -7,6 +7,7 @@ import BookingCard, {
 import BookingDetailSheet from "@/app/components/BookingDetailSheet";
 import SkeletonCard from "@/app/components/SkeletonCard";
 import { type BookingStatus } from "@/lib/transitions";
+import { hasRate, TOTAL_ON_REQUEST } from "@/lib/pricing";
 
 type Filter = "all" | BookingStatus;
 
@@ -147,7 +148,7 @@ export default function AdminBookings() {
       b.packages?.name ?? "",
       b.tour_date,
       String(b.pax),
-      String(b.total_amount),
+      hasRate(b.total_amount) ? String(b.total_amount) : TOTAL_ON_REQUEST,
       b.status,
       b.gcash_ref ?? "",
       b.created_at,

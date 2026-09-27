@@ -15,7 +15,11 @@ export interface Operator {
 export interface PackageTier {
   min_pax: number;
   max_pax: number;
-  price_per_pax: number;
+  /**
+   * Nightly rate. 0 (or absent) = rates on request — no public rate is
+   * published for this tier. Never render 0 as money; see lib/pricing.ts.
+   */
+  price_per_pax?: number | null;
 }
 
 export interface Package {

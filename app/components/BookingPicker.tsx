@@ -5,7 +5,7 @@ import CalendarGrid from "@/app/components/CalendarGrid";
 import PaxStepper from "@/app/components/PaxStepper";
 import LiveTotal from "@/app/components/LiveTotal";
 import { useAvailability } from "@/hooks/useAvailability";
-import { calculateTierPrice } from "@/lib/pricing";
+import { calculateTierPrice, hasTierForPax, RATE_ON_REQUEST } from "@/lib/pricing";
 import type { PackageTier } from "@/lib/types";
 
 interface BookingPickerProps {
@@ -89,10 +89,16 @@ export default function BookingPicker({
       : tierMaxPax;
   const effectivePax = Math.min(pax, maxPax);
 
-  // Price calculation — flat per-night rate x nights
+  // Price calculation — flat per-night rate x nights. Null when the tier
+  // has no published rate (rates on request) — the bar below still offers
+  // Continue, it just shows no money.
   const pricing = useMemo(
     () => calculateTierPrice(tiers, effectivePax, stayNights),
     [tiers, effectivePax, stayNights]
+  );
+  const tierMatch = useMemo(
+    () => hasTierForPax(tiers, effectivePax),
+    [tiers, effectivePax]
   );
 
   const prevMonth = () => {
@@ -181,7 +187,7 @@ export default function BookingPicker({
         className="fixed bottom-0 inset-x-0 z-50"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        {pricing && selectedDate && onContinue ? (
+        {selectedDate && onContinue ? (
           stayClosed ? (
             /* A blocked night / non-running weekday makes the whole stay
                unbookable — stop here rather than let the server 409. */
@@ -189,18 +195,30 @@ export default function BookingPicker({
               One or more nights of this stay are unavailable — pick another
               date
             </div>
+          ) : !tierMatch ? (
+            /* Pax outside every tier — same wall the server would raise. */
+            <div className="w-full bg-white border-t border-gray-200 px-4 py-3 text-center text-red-500 text-sm font-medium">
+              No pricing tier for {effectivePax} guest
+              {effectivePax === 1 ? "" : "s"}
+            </div>
           ) : (
             /* Continue CTA when date selected + callback provided */
             <div className="w-full bg-white border-t border-gray-200 px-4 py-3">
               <div className="flex items-center justify-between max-w-3xl mx-auto mb-2">
                 <div className="text-sm text-ink-muted">
-                  <span className="font-medium text-ink">
-                    ₱{pricing.total.toLocaleString("en-PH")}
-                  </span>
-                  <span className="ml-1">
-                    for {effectivePax} guest{effectivePax === 1 ? "" : "s"}
-                    {stayNights > 1 && `, ${stayNights} nights`}
-                  </span>
+                  {pricing ? (
+                    <>
+                      <span className="font-medium text-ink">
+                        ₱{pricing.total.toLocaleString("en-PH")}
+                      </span>
+                      <span className="ml-1">
+                        for {effectivePax} guest{effectivePax === 1 ? "" : "s"}
+                        {stayNights > 1 && `, ${stayNights} nights`}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-medium text-ink">{RATE_ON_REQUEST}</span>
+                  )}
                 </div>
               </div>
               <button
@@ -218,6 +236,11 @@ export default function BookingPicker({
             pax={effectivePax}
             total={pricing.total}
           />
+        ) : tierMatch ? (
+          /* Tier matches but has no published rate — neutral bar */
+          <div className="w-full bg-white border-t border-gray-200 px-4 py-3 text-center text-sm font-medium text-ink">
+            {RATE_ON_REQUEST}
+          </div>
         ) : effectivePax > 0 ? (
           /* No tier match warning */
           <div className="w-full bg-white border-t border-gray-200 px-4 py-3 text-center text-red-500 text-sm font-medium">

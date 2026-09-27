@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { hasRate, TOTAL_ON_REQUEST } from "@/lib/pricing";
 
 interface SuccessScreenProps {
   bookingCode: string;
@@ -68,7 +69,9 @@ export default function SuccessScreen({
     try {
       await navigator.share({
         title: `Booking ${bookingCode}`,
-        text: `My ${packageName} booking request is in! Code: ${bookingCode}. Stay date: ${formatDisplayDate(tourDate)}, ${nights} night${nights === 1 ? "" : "s"}. Total: ₱${totalAmount.toLocaleString("en-PH")}`,
+        text: `My ${packageName} booking request is in! Code: ${bookingCode}. Stay date: ${formatDisplayDate(tourDate)}, ${nights} night${nights === 1 ? "" : "s"}.${
+          hasRate(totalAmount) ? ` Total: ₱${totalAmount.toLocaleString("en-PH")}` : ""
+        }`,
       });
     } catch {
       // ponytail: user cancelled share or API unavailable
@@ -164,8 +167,16 @@ export default function SuccessScreen({
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-ink-muted">Total</span>
-          <span className="font-heading font-bold text-brand">
-            ₱{totalAmount.toLocaleString("en-PH")}
+          <span
+            className={
+              hasRate(totalAmount)
+                ? "font-heading font-bold text-brand"
+                : "text-ink-muted"
+            }
+          >
+            {hasRate(totalAmount)
+              ? `₱${totalAmount.toLocaleString("en-PH")}`
+              : TOTAL_ON_REQUEST}
           </span>
         </div>
       </div>

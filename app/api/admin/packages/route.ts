@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { deriveCapacityPerDay } from "@/lib/pricing";
+import { deriveCapacityPerDay, normalizeTiers } from "@/lib/pricing";
 
 /**
  * GET /api/admin/packages — List packages for the authenticated operator.
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    const safeTiers = normalizeTiers(tiers);
 
     // Generate slug from name
     let slug = name
@@ -90,9 +91,9 @@ export async function POST(request: NextRequest) {
         slug,
         description: description || "",
         photo_url: photo_url || null,
-        tiers,
+        tiers: safeTiers,
         days_of_week: days_of_week ?? [0, 1, 2, 3, 4, 5, 6],
-        capacity_per_day: deriveCapacityPerDay(tiers),
+        capacity_per_day: deriveCapacityPerDay(safeTiers),
         downpayment_pct: downpayment_pct ?? 0,
         cutoff_hours: cutoff_hours ?? 24,
         dp_refundable: dp_refundable ?? false,

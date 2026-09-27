@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { calculateTierPrice } from "@/lib/pricing";
+import { calculateTierPrice, TOTAL_ON_REQUEST } from "@/lib/pricing";
 import { type Package, type PackageTier } from "@/lib/types";
 
 /* ── Types ── */
@@ -220,21 +220,30 @@ export default function ManualBookingForm({ onSuccess }: ManualBookingFormProps)
           </div>
         )}
 
-        {/* Price summary */}
-        {selectedPkg && pricing && tourDate && isDateAvailable(tourDate) && (
+        {/* Price summary — neutral when the package has no published rate */}
+        {selectedPkg && tourDate && isDateAvailable(tourDate) && (
           <div className="p-3 rounded-touch bg-brand/5 border border-brand/20 space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-ink-muted">
-                Total · ₱{pricing.pricePerPax.toLocaleString("en-PH")}/night
-              </span>
-              <span className="font-semibold">
-                ₱{totalAmount.toLocaleString("en-PH")}
-              </span>
-            </div>
-            {downpaymentAmount > 0 && (
-              <div className="flex justify-between text-xs text-ink-muted">
-                <span>Downpayment ({selectedPkg.downpayment_pct}%)</span>
-                <span>₱{downpaymentAmount.toLocaleString("en-PH")}</span>
+            {pricing ? (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-ink-muted">
+                    Total · ₱{pricing.pricePerPax.toLocaleString("en-PH")}/night
+                  </span>
+                  <span className="font-semibold">
+                    ₱{totalAmount.toLocaleString("en-PH")}
+                  </span>
+                </div>
+                {downpaymentAmount > 0 && (
+                  <div className="flex justify-between text-xs text-ink-muted">
+                    <span>Downpayment ({selectedPkg.downpayment_pct}%)</span>
+                    <span>₱{downpaymentAmount.toLocaleString("en-PH")}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex justify-between text-sm">
+                <span className="text-ink-muted">Total</span>
+                <span className="font-semibold">{TOTAL_ON_REQUEST}</span>
               </div>
             )}
           </div>

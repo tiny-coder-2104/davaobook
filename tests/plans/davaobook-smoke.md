@@ -2,6 +2,13 @@
 
 Full-system, one pass. Run order: Setup → Landing → Redirects → Packages → Booking (API) → Booking (browser) → Tracking → Voucher → Admin → Security → PWA → Cron → Edge → Cleanup. All checks runnable by tester (bash + curl + navigator). Fake PII only.
 
+> **Rates on request (F-01, 2026-09-27):** the demo publishes NO room rates —
+> `packages.tiers[].price_per_pax` is 0 and `bookings.total_amount`/`tier_price`
+> are 0 for new rows. Room cards / package pages say **"Message for rates"**,
+> booking totals say **"To be confirmed by the resort"**. Every price
+> expectation below is the *absence* of a price; re-run
+> `node tests/rates-on-request.check.mjs` for the automated version.
+
 ```
 U=https://davaotours-booking.vercel.app
 ENVFILE=${ENVFILE:?set to the Supabase env file path}
@@ -25,8 +32,8 @@ Verified facts (qa recon 2026-09-24, read-only — plan expectations are based o
 - 1.1 `curl -s -o /dev/null -w "%{http_code}" $U/seaclouds` → 200.
 - 1.2 `curl -s $U/seaclouds | grep -c "SeaClouds Mountain View Resort"` → ≥1 (branding in TrustStrip).
 - 1.3 Room cards: `curl -s $U/seaclouds | grep -oE "Standard Room|Family Cabin|Mountain View Suite" | sort -u` → exactly those 3 names.
-- 1.4 Prices: `curl -s $U/seaclouds | grep -oE "₱1,500|₱2,500|₱3,500" | sort -u` → all 3 present (from-price per card).
-- 1.5 Per-night labels: `curl -s $U/seaclouds | grep -o "/night" | wc -l` → ≥3.
+- 1.4 Prices: `curl -s $U/seaclouds | grep -oE "₱1,500|₱2,500|₱3,500" | sort -u` → **empty** (no invented rates), and `grep -o "Message for rates" | wc -l` → ≥3 (one per room card).
+- 1.5 Per-night labels: `curl -s $U/seaclouds | grep -o "/night" | wc -l` → `0` (no rate, no "/night").
 - 1.6 CTAs: `curl -s $U/seaclouds | grep -o "Check Availability" | wc -l` → 3.
 - 1.7 Footer: `curl -s $U/seaclouds | grep -oE "Track my booking|This is a live demo|Create Operator Account|Powered by DavaoBook|Built by TinyCoder Studio" | sort -u` → all 5 present; "Track my booking" href = `/track`; "Built by TinyCoder Studio" href = `https://welcome-tinycoder-studio.vercel.app`.
 - 1.8 Browser (navigator): load `$U/seaclouds` at 1280×800 → 0 console errors, no text/pill overlap in header or footer (screenshot `logs/navigator/YYYY-MM-DD-landing/`).
@@ -37,30 +44,30 @@ Verified facts (qa recon 2026-09-24, read-only — plan expectations are based o
 - 2.3 Old tour slugs: `for s in samal-island-tours island-hopping sunset-cruise mangrove-tour; do curl -s -o /dev/null -w "$s:%{http_code} "; done` → 404 ×4.
 
 ## 3. Package pages
-- 3.1 `curl -s $U/p/standard-room | grep -oE "Price / night|guests|₱1,500|₱1,800|Check availability" | sort | uniq -c` → "Price / night" header, "guests" column, both tier prices, CTA. (Tiers: 1–2 guests ₱1,500, 3–4 guests ₱1,800.)
-- 3.2 `curl -s $U/p/family-cabin | grep -oE "₱2,500|₱3,000" | sort -u` → both (tiers 1–4 ₱2,500 / 5–6 ₱3,000).
-- 3.3 `curl -s $U/p/mountain-view-suite | grep -oE "₱3,500|₱4,000" | sort -u` → both (tiers 1–2 ₱3,500 / 3–4 ₱4,000).
+- 3.1 `curl -s $U/p/standard-room | grep -oE "Message for rates|Price / night|₱[0-9]|Check availability" | sort | uniq -c` → "Message for rates" + CTA; **no `Price / night` header, no ₱ figures** (the tier table is replaced entirely when no rate is published).
+- 3.2 `curl -s $U/p/family-cabin | grep -oE "₱2,500|₱3,000" | sort -u` → empty; page contains `Message for rates`.
+- 3.3 `curl -s $U/p/mountain-view-suite | grep -oE "₱3,500|₱4,000" | sort -u` → empty; page contains `Message for rates`.
 - 3.4 `curl -s -o /dev/null -w "%{http_code}" $U/p/standard-room/book` → 200 (booking flow page renders).
 - 3.5 `curl -s -o /dev/null -w "%{http_code}" $U/p/standard-room/book` browser: flow renders picker (calendar + guest stepper), no JS errors.
 
 ## 4. Booking flow — critical path
 ### 4A. API (deterministic, curl)
-- 4.1 Create: `curl -s -w "\n%{http_code}" -X POST $U/api/bookings -H 'Content-Type: application/json' -d '{"package_id":"12cb688a-ac00-4c8b-bb55-4545ac7d1de1","tour_date":"'$TEST_DATE'","pax":2,"guest_name":"QA Test Guest","guest_mobile":"09170000000","guest_email":"'$EMAIL'","guest_pickup_area":"Test Area","guest_notes":"smoke test"}'` → 201, JSON has `code` (pattern `STAND-<MMDD>-QAT`), `status:"PENDING_CONFIRMATION"`, `total_amount:1500`. Capture `CODE1`.
-- 4.2 Server-side verify (secret key): `curl -s "$SUPABASE_URL/rest/v1/bookings?select=code,status,total_amount,pax,tour_date&code=eq.$CODE1" -H "apikey: $SUPABASE_SECRET_KEY" -H "Authorization: Bearer $SUPABASE_SECRET_KEY"` → 1 row, `status=PENDING_CONFIRMATION`, `total_amount=1500`, `pax=2`. **Flat pricing proof: 2 guests = ₱1,500, NOT ₱3,000.**
+- 4.1 Create: `curl -s -w "\n%{http_code}" -X POST $U/api/bookings -H 'Content-Type: application/json' -d '{"package_id":"12cb688a-ac00-4c8b-bb55-4545ac7d1de1","tour_date":"'$TEST_DATE'","pax":2,"guest_name":"QA Test Guest","guest_mobile":"09170000000","guest_email":"'$EMAIL'","guest_pickup_area":"Test Area","guest_notes":"smoke test"}'` → 201, JSON has `code` (pattern `STAND-<MMDD>-QAT`), `status:"PENDING_CONFIRMATION"`, `total_amount:0` (rates on request). Capture `CODE1`.
+- 4.2 Server-side verify (secret key): `curl -s "$SUPABASE_URL/rest/v1/bookings?select=code,status,total_amount,pax,tour_date&code=eq.$CODE1" -H "apikey: $SUPABASE_SECRET_KEY" -H "Authorization: Bearer $SUPABASE_SECRET_KEY"` → 1 row, `status=PENDING_CONFIRMATION`, `total_amount=0`, `pax=2`. (Tier match still bounds pax: 2 guests is inside the 1–2 / 3–4 tiers.)
 - 4.3 Missing fields: `curl -s -w "\n%{http_code}" -X POST $U/api/bookings -H 'Content-Type: application/json' -d '{}'` → 400 `Missing required fields: package_id, tour_date, pax, guest_name, guest_mobile, guest_pickup_area`.
 - 4.4 Invalid pax: `for p in 0 -1 1.5; do curl -s -o /dev/null -w "$p:%{http_code} " -X POST $U/api/bookings -H 'Content-Type: application/json' -d '{"package_id":"12cb688a-ac00-4c8b-bb55-4545ac7d1de1","tour_date":"'$TEST_DATE'","pax":'$p',"guest_name":"QA","guest_mobile":"09170000000","guest_pickup_area":"x"}'; done` → 400 ×3 (`pax must be a positive integer`).
 - 4.5 Past date: `curl -s -w "\n%{http_code}" -X POST $U/api/bookings -H 'Content-Type: application/json' -d '{"package_id":"12cb688a-ac00-4c8b-bb55-4545ac7d1de1","tour_date":"'$(date -d "-1 day" +%F)'","pax":1,"guest_name":"QA","guest_mobile":"09170000000","guest_pickup_area":"x"}'` → 400 `Cannot book a date in the past`.
 - 4.6 Pax beyond tier: `curl -s -w "\n%{http_code}" -X POST $U/api/bookings -H 'Content-Type: application/json' -d '{"package_id":"12cb688a-ac00-4c8b-bb55-4545ac7d1de1","tour_date":"'$TEST_DATE'","pax":5,"guest_name":"QA","guest_mobile":"09170000000","guest_pickup_area":"x"}'` → 400 `No pricing tier matches the pax count` (standard-room max tier = 4).
 - 4.7 Capacity (duplicate date/room): family-cabin cap 3. `D2=$(date -d "+11 days" +%F)`; book pax=3 twice on D2 → first 201, second → **409 `No capacity available for this date`** (3+3 > 3). Capture `CODE2` from the first.
 - 4.8 Blocked date: no blocks in live DB (verified) → **N/A**. Conditional: if a `blocks` row exists — probe with the **SECRET key** (`curl -s "$SUPABASE_URL/rest/v1/blocks?select=date,package_id" -H "apikey: $SUPABASE_SECRET_KEY" -H "Authorization: Bearer $SUPABASE_SECRET_KEY"`; since migration 009 the anon/publishable key gets **403 on blocks+operators private columns by design** — do not treat that as a regression) — book that date → expect 409 `Date is blocked by the operator`. Code path exists (DATE_BLOCKED in DB fn).
-- 4.8b Multi-night (migration 010, run only after 010 is applied): `D3=$(date -d "+21 days" +%F)`; POST `/api/bookings` with the 4.1 payload + `"tour_date":"'$D3'","pax":1,"nights":3` → 201 with `total_amount:4500` (₱1,500 × 3), `end_date = D3+3`, `nights:3`. Then `"nights":99` on a fresh date → 400 `This package allows at most 7 nights per booking`. Cleanup: DELETE the row by `code` with the SECRET key (same as §12).
+- 4.8b Multi-night (migration 010, run only after 010 is applied): `D3=$(date -d "+21 days" +%F)`; POST `/api/bookings` with the 4.1 payload + `"tour_date":"'$D3'","pax":1,"nights":3` → 201 with `total_amount:0` (rates on request), `end_date = D3+3`, `nights:3`. Then `"nights":99` on a fresh date → 400 `This package allows at most 7 nights per booking`. Cleanup: DELETE the row by `code` with the SECRET key (same as §12).
 
 ### 4B. Browser (navigator, prod — creates one disposable booking)
-- 4.9 Full flow: `$U/p/standard-room/book` → pick first selectable date (green "Available" or yellow "Few left" cell; past/full/closed cells are disabled) → set guests to 2 → sticky bar shows **₱1,500 for 2 guests** → Continue → details: Full Name `QA Test Guest`, Mobile `09170000000`, Email `$EMAIL`, Pickup Area `Test Area` → Continue → confirm step.
+- 4.9 Full flow: `$U/p/standard-room/book` → pick first selectable date (green "Available" or yellow "Few left" cell; past/full/closed cells are disabled) → set guests to 2 → sticky bar shows **"Message for rates"** (NO peso amount) → Continue → details: Full Name `QA Test Guest`, Mobile `09170000000`, Email `$EMAIL`, Pickup Area `Test Area` → Continue → confirm step.
 - 4.10 **NO payment step**: at every step (picker, details, confirm) assert zero payment UI — no GCash, no "Pay", no amount-due, no payment method fields. (Booking = request; owner confirms + handles payment offline.)
-- 4.11 Confirm step total: assert **₱1,500** (flat tier price for 2 guests — NOT ₱3,000).
+- 4.11 Confirm step total: assert **"To be confirmed by the resort"** (no Price/Total peso rows).
 - 4.12 Submit → success screen: heading **"Request received!"**, booking code shown (capture `CODE3`), "Slot held until" line, "View booking status →" link.
-- 4.13 Server-side verify CODE3: same REST read as 4.2 → `status=PENDING_CONFIRMATION`, `total_amount=1500`.
+- 4.13 Server-side verify CODE3: same REST read as 4.2 → `status=PENDING_CONFIRMATION`, `total_amount=0`.
 - Evidence: screenshots at each step → `logs/navigator/YYYY-MM-DD-booking-flow/`.
 
 ## 5. Tracking

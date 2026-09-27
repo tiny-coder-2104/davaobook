@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import type { Operator, Package, PackageTier } from "../../../lib/types";
 import VerifiedBadge from "../../components/VerifiedBadge";
+import { hasRate, RATE_ON_REQUEST } from "../../../lib/pricing";
 
 // `active` is a mutable flag: deactivating a package must 404 this page on the
 // next request, not up to `revalidate` seconds later. revalidate alone was not
@@ -16,13 +17,20 @@ export const fetchCache = "force-no-store";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function formatPrice(amount: number): string {
-  return `₱${amount.toLocaleString("en-PH")}`;
-}
-
 function TierTable({ tiers }: { tiers: PackageTier[] }) {
   if (tiers.length === 0) return null;
   const sorted = [...tiers].sort((a, b) => a.min_pax - b.min_pax);
+
+  // No published rate anywhere → don't render a price table at all
+  // (an unpriced tier must never print ₱0 next to a real resort's name).
+  if (!sorted.some((t) => hasRate(t.price_per_pax))) {
+    return (
+      <p className="text-sm text-ink-muted">
+        <span className="font-semibold text-ink">{RATE_ON_REQUEST}</span> —
+        message the resort for availability and pricing.
+      </p>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -41,7 +49,9 @@ function TierTable({ tiers }: { tiers: PackageTier[] }) {
                 {tier.max_pax > tier.min_pax ? `–${tier.max_pax}` : ""} guests
               </td>
               <td className="py-2 text-right font-medium">
-                {formatPrice(tier.price_per_pax)}
+                {hasRate(tier.price_per_pax)
+                  ? `₱${(tier.price_per_pax as number).toLocaleString("en-PH")}`
+                  : RATE_ON_REQUEST}
               </td>
             </tr>
           ))}

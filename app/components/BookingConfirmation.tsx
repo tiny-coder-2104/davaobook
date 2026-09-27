@@ -1,6 +1,7 @@
 "use client";
 
 import type { GuestDetails } from "./GuestDetailsForm";
+import { hasRate, TOTAL_ON_REQUEST } from "@/lib/pricing";
 
 interface BookingConfirmationProps {
   packageName: string;
@@ -64,10 +65,21 @@ export default function BookingConfirmation({
         )}
         <Row label="Guests" value={`${pax} guest${pax === 1 ? "" : "s"}`} />
         <Row label="Nights" value={`${nights} night${nights === 1 ? "" : "s"}`} />
-        <Row label="Price" value={`₱${pricePerPax.toLocaleString("en-PH")} / night`} />
-        <div className="border-t border-gray-100 pt-2">
-          <Row label="Total" value={`₱${totalAmount.toLocaleString("en-PH")}`} bold />
-        </div>
+        {hasRate(totalAmount) ? (
+          <>
+            <Row
+              label="Price"
+              value={`₱${pricePerPax.toLocaleString("en-PH")} / night`}
+            />
+            <div className="border-t border-gray-100 pt-2">
+              <Row label="Total" value={`₱${totalAmount.toLocaleString("en-PH")}`} bold />
+            </div>
+          </>
+        ) : (
+          <div className="border-t border-gray-100 pt-2">
+            <Row label="Total" value={TOTAL_ON_REQUEST} muted />
+          </div>
+        )}
       </div>
 
       {/* Guest info card */}

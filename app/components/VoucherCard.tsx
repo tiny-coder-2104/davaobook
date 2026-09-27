@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import QRCode from "./QRCode";
 import { cacheVoucher } from "@/lib/voucher-cache";
+import { hasRate, TOTAL_ON_REQUEST } from "@/lib/pricing";
 
 /* ── Status color bands (spec §4.2 item 4) ── */
 
@@ -184,8 +185,14 @@ export default function VoucherCard({ data, isOnline }: VoucherCardProps) {
             <span className="text-xs text-ink-muted uppercase tracking-wide">
               Total
             </span>
-            <span className="text-sm font-heading font-bold text-brand">
-              ₱{data.total_amount.toLocaleString("en-PH")}
+            <span
+              className={`text-sm font-heading font-bold ${
+                hasRate(data.total_amount) ? "text-brand" : "text-ink-muted"
+              }`}
+            >
+              {hasRate(data.total_amount)
+                ? `₱${data.total_amount.toLocaleString("en-PH")}`
+                : TOTAL_ON_REQUEST}
             </span>
           </div>
         </div>

@@ -7,6 +7,7 @@ import BookingConfirmation from "./BookingConfirmation";
 import SuccessScreen from "./SuccessScreen";
 import ProgressBar from "./ProgressBar";
 import type { GuestDetails } from "./GuestDetailsForm";
+import { calculateTierPrice } from "@/lib/pricing";
 import type { PackageTier } from "@/lib/types";
 
 /* ── Types ── */
@@ -41,9 +42,11 @@ export default function BookingFormFlow({
 
   // Pricing (re-derive from tier). Flat nightly rate x nights — matches the
   // server's tier_price * p_nights in create_booking_transactional.
-  const pricing = tiers.find((t) => pax >= t.min_pax && pax <= t.max_pax);
-  const pricePerPax = pricing?.price_per_pax ?? 0;
-  const totalAmount = pricePerPax * nights;
+  // Null when the tier has no published rate → 0 flows downstream and every
+  // money display renders "To be confirmed by the resort" instead of ₱0.
+  const pricing = calculateTierPrice(tiers, pax, nights);
+  const pricePerPax = pricing?.pricePerPax ?? 0;
+  const totalAmount = pricing?.total ?? 0;
 
   // Booking result
   const [bookingCode, setBookingCode] = useState<string | null>(null);

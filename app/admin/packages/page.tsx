@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { type Package } from "@/lib/types";
+import { hasRate, RATE_ON_REQUEST } from "@/lib/pricing";
 
 /* ── Package card skeleton ── */
 
@@ -40,7 +41,8 @@ function formatDays(days: number[]): string {
 
 function priceRange(tiers: Package["tiers"]): string {
   if (!tiers || tiers.length === 0) return "No pricing";
-  const prices = tiers.map((t) => t.price_per_pax);
+  const prices = tiers.map((t) => t.price_per_pax).filter(hasRate) as number[];
+  if (prices.length === 0) return RATE_ON_REQUEST;
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   if (min === max) return `₱${min.toLocaleString("en-PH")}/night`;
